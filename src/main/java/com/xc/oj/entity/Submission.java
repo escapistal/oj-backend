@@ -14,7 +14,7 @@ public class Submission implements Serializable{
     private Long id;
     private Long contestId;
     private Long problemId;
-    private User user;
+    private UserInfo user;
     private String language;
     private String code;
     private Timestamp createTime;
@@ -58,11 +58,11 @@ public class Submission implements Serializable{
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    public User getUser() {
+    public UserInfo getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(UserInfo user) {
         this.user = user;
     }
 

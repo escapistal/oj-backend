@@ -143,7 +143,7 @@ public class ProblemService {
             f = multipartFileToFile(file);
             String dirMd5 = DigestUtils.md5DigestAsHex(fileName.getBytes());
             System.out.println(fileName + " " + dirMd5);
-            File dir = new File(dirMd5);
+            File dir = new File("testcase"+File.separator+dirMd5);
             if (dir.exists())
                 deleteDir(dir);
             dir.mkdir();
@@ -154,7 +154,7 @@ public class ProblemService {
                 ZipEntry e = (ZipEntry) entries.nextElement();
                 if (e.isDirectory())
                     continue;
-                File target = new File(dirMd5 + File.separator + e.getName());
+                File target = new File("testcase"+File.separator+dirMd5 + File.separator + e.getName());
                 target.createNewFile();
                 InputStream is = zipFile.getInputStream(e);
                 OutputStream os = new FileOutputStream(target);
@@ -217,15 +217,15 @@ public class ProblemService {
                 String suf = names[names.length - 1];
                 String pref = src.getName().substring(0, src.getName().length() - suf.length() - 1);
                 if(suf.equalsIgnoreCase("in"))
-                    src.renameTo(new File(dirMd5+File.separator+order.get(pref)+".in"));
+                    src.renameTo(new File("testcase"+File.separator+dirMd5+File.separator+order.get(pref)+".in"));
                 else
-                    src.renameTo(new File(dirMd5+File.separator+order.get(pref)+".out"));
+                    src.renameTo(new File("testcase"+File.separator+dirMd5+File.separator+order.get(pref)+".out"));
             }
             testcaseMd5=DigestUtils.md5DigestAsHex(testcaseMd5.getBytes());
-            File targetDir=new File(testcaseMd5);
+            File targetDir=new File("testcase"+File.separator+testcaseMd5);
             if(targetDir.exists())
                 deleteDir(targetDir);
-            dir.renameTo(new File(testcaseMd5));
+            dir.renameTo(new File("testcase"+File.separator+testcaseMd5));
             System.out.println(testcaseMd5);
 
             problem.setTestCaseMd5(testcaseMd5);

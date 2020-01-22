@@ -37,8 +37,8 @@ public class Problem implements Serializable {
     private String spjCode;
     private String spjMd5;
 
-    private User createUser;
-    private User updateUser;
+    private UserInfo createUser;
+    private UserInfo updateUser;
 
     @Id
     @Column(name = "id")
@@ -255,21 +255,21 @@ public class Problem implements Serializable {
 
     @ManyToOne
     @JoinColumn(name="create_id")
-    public User getCreateUser() {
+    public UserInfo getCreateUser() {
         return createUser;
     }
 
-    public void setCreateUser(User createUser) {
+    public void setCreateUser(UserInfo createUser) {
         this.createUser = createUser;
     }
 
     @ManyToOne
     @JoinColumn(name="update_id")
-    public User getUpdateUser() {
+    public UserInfo getUpdateUser() {
         return updateUser;
     }
 
-    public void setUpdateUser(User updateUser) {
+    public void setUpdateUser(UserInfo updateUser) {
         this.updateUser = updateUser;
     }
 

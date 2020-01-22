@@ -28,8 +28,8 @@ public class Contest implements Serializable {
     private Boolean visible;
     private Timestamp createTime;
     private Timestamp updateTime;
-    private User createUser;
-    private User updateUser;
+    private UserInfo createUser;
+    private UserInfo updateUser;
     List<ContestProblem> problemList;
 
     @Id
@@ -199,21 +199,21 @@ public class Contest implements Serializable {
 
     @ManyToOne
     @JoinColumn(name="create_id")
-    public User getCreateUser() {
+    public UserInfo getCreateUser() {
         return createUser;
     }
 
-    public void setCreateUser(User createUser) {
+    public void setCreateUser(UserInfo createUser) {
         this.createUser = createUser;
     }
 
     @ManyToOne
     @JoinColumn(name="update_id")
-    public User getUpdateUser() {
+    public UserInfo getUpdateUser() {
         return updateUser;
     }
 
-    public void setUpdateUser(User updateUser) {
+    public void setUpdateUser(UserInfo updateUser) {
         this.updateUser = updateUser;
     }
 

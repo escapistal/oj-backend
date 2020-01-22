@@ -31,7 +31,7 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
                 }
                 System.out.println();
             }catch(Exception e){
-                System.out.println("tick-tok");
+//                System.out.println("tick-tok");
             }
         }
     }
