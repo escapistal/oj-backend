@@ -18,10 +18,13 @@ public enum responseCode {
     NOT_ZIP_EXTENSION(30001,"非zip文件"),
     UNMATCHED_FILE(30003,"存在失配的输入与输出文件"),
     READ_FILE_ERROR(30004,"文件读取失败"),
+    FTP_UPLOAD_ERROR(30005,"FTP上传失败，请稍后再试，或联系管理员"),
 
     CONTEST_NOT_EXIST(40001,"比赛不存在"),
 
     CONTEST_PROBLEM_NOT_EXIST(50001,"赛题不存在")
+
+
     ;
     private int code;
     private String msg;

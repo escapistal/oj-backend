@@ -20,7 +20,7 @@ public class ContestProblemController {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public  responseBase<ContestProblem> findById(@PathVariable Long id){
+    public responseBase<ContestProblem> findById(@PathVariable Long id){
         return contestProblemService.findById(id);
     }
 

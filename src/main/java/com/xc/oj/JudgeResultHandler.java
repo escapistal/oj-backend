@@ -30,6 +30,8 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
                         System.out.println(key + " " + mp.get(key));
                 }
                 System.out.println();
+                // TODO 以上为测试代码，需实际修改对应submission
+
             }catch(Exception e){
 //                System.out.println("tick-tok");
             }

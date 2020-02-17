@@ -5,6 +5,9 @@ import com.xc.oj.repository.ProblemRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.FTPUtil;
+import com.xc.oj.util.ZipUtil;
+import jdk.internal.util.xml.impl.Input;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -16,6 +19,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class ProblemService {
@@ -130,17 +134,17 @@ public class ProblemService {
         is.close();
         return f;
     }
-    public responseBase<String> setTestcase(long id, MultipartFile file){
+    public responseBase setTestcase(long id, MultipartFile multipartFile){
         Problem problem=problemRepository.findById(id).orElse(null);
         if(problem==null)
             return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
-        String fileName = file.getOriginalFilename();
+        String fileName = multipartFile.getOriginalFilename();
         if(!fileName.endsWith(".zip"))
             return responseBuilder.fail(responseCode.NOT_ZIP_EXTENSION);
         File f;
         ZipFile zipFile;
         try {
-            f = multipartFileToFile(file);
+            f = multipartFileToFile(multipartFile);
             String dirMd5 = DigestUtils.md5DigestAsHex(fileName.getBytes());
             System.out.println(fileName + " " + dirMd5);
             File dir = new File("testcase"+File.separator+dirMd5);
@@ -158,10 +162,7 @@ public class ProblemService {
                 target.createNewFile();
                 InputStream is = zipFile.getInputStream(e);
                 OutputStream os = new FileOutputStream(target);
-                int bytesRead;
-                byte[] buffer = new byte[8192];
-                while ((bytesRead = is.read(buffer, 0, 8192)) != -1)
-                    os.write(buffer, 0, bytesRead);
+                ZipUtil.flow(is,os);
                 os.close();
                 is.close();
                 String[] names = e.getName().split("\\.");
@@ -225,17 +226,39 @@ public class ProblemService {
             File targetDir=new File("testcase"+File.separator+testcaseMd5);
             if(targetDir.exists())
                 deleteDir(targetDir);
-            dir.renameTo(new File("testcase"+File.separator+testcaseMd5));
+            dir.renameTo(targetDir);
             System.out.println(testcaseMd5);
+            System.out.println(dir);
+//            File md5File=new File("testcase"+File.separator+"md5");
+//            md5File.createNewFile();
+//            new FileOutputStream(md5File).write(testcaseMd5.getBytes());
 
+            File zip=new File("testcase"+File.separator+testcaseMd5+".zip");
+            if(zip.exists())
+                zip.delete();
+            zip.createNewFile();
+            ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zip)));
+            InputStream ins;
+            for(File file:targetDir.listFiles()) {
+                ZipEntry zipEntry=new ZipEntry(file.getName());
+                zos.putNextEntry(zipEntry);
+                ins=new FileInputStream(file);
+                ZipUtil.flow(ins,zos);
+                ins.close();
+            }
+            zos.close();
+            deleteDir(targetDir);
             problem.setTestCaseMd5(testcaseMd5);
             problemRepository.save(problem);
+            if(!FTPUtil.upload(zip))
+                return responseBuilder.fail(responseCode.FTP_UPLOAD_ERROR);
+            return responseBuilder.success(inName.size());
         } catch(IOException e)
         {
             return responseBuilder.fail(responseCode.READ_FILE_ERROR);
         }finally {
 
         }
-        return responseBuilder.success();
+
     }
 }

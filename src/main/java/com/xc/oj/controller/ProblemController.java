@@ -57,7 +57,7 @@ public class ProblemController {
     }
 
     @RequestMapping(value = "/setTestcase/{id}", method = RequestMethod.POST)
-    public responseBase<String> setTestcase(@PathVariable long id, @RequestBody MultipartFile file){
+    public responseBase setTestcase(@PathVariable long id, @RequestBody MultipartFile file){
         return problemService.setTestcase(id,file);
     }
 }
