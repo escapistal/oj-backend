@@ -1,6 +1,7 @@
 package com.xc.oj.controller;
 
 import com.xc.oj.entity.Contest;
+import com.xc.oj.entity.ContestAnnouncement;
 import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ContestService;
@@ -28,6 +29,11 @@ public class ContestController {
     @RequestMapping(value="/{id}/addProblem",method = RequestMethod.POST)
     public responseBase<String> addProblem(@PathVariable Long id, @RequestBody ContestProblem contestProblem){
         return contestService.addProblem(id,contestProblem);
+    }
+
+    @RequestMapping(value="/{id}/addAnnouncement",method = RequestMethod.POST)
+    public responseBase<String> addProblem(@PathVariable Long id, @RequestBody ContestAnnouncement contestAnnouncement){
+        return contestService.addAnnouncement(id,contestAnnouncement);
     }
 
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)

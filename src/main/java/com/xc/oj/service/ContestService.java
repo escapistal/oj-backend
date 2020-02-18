@@ -1,6 +1,7 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.Contest;
+import com.xc.oj.entity.ContestAnnouncement;
 import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.repository.ContestRepository;
 import com.xc.oj.response.responseBase;
@@ -20,6 +21,8 @@ public class ContestService {
     ContestRepository contestRepository;
     @Autowired
     ContestProblemService contestProblemService;
+    @Autowired
+    ContestAnnouncementService contestAnnouncementService;
 
     public responseBase<List<Contest>> listAll(){
         return responseBuilder.success(contestRepository.findAll());
@@ -27,7 +30,6 @@ public class ContestService {
 
     public responseBase<String> add(Contest contest){
         contest.setCreateTime(new Timestamp(new Date().getTime()));
-        contest.setProblemList(new ArrayList<>());
         System.out.println(contest.getLockTime());
         contestRepository.save(contest);
         return responseBuilder.success();
@@ -41,10 +43,16 @@ public class ContestService {
     }
 
     public responseBase<String> addProblem(Long id, ContestProblem contestProblem) {
-        Contest contest=contestRepository.findById(id).orElse(null);
-        if(contest==null)
+        if(!contestRepository.existsById(id))
             return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
         contestProblemService.add(id,contestProblem);
+        return responseBuilder.success();
+    }
+
+    public responseBase<String> addAnnouncement(Long id, ContestAnnouncement contestAnnouncement){
+        if(!contestRepository.existsById(id))
+            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        contestAnnouncementService.add(id,contestAnnouncement);
         return responseBuilder.success();
     }
 
@@ -52,7 +60,7 @@ public class ContestService {
         Contest data=contestRepository.findById(id).orElse(null);
         if(data==null)
             return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-        if(contest.getSortId()!=0)
+        if(contest.getSortId()!=null)
             data.setSortId(contest.getSortId());
         if(contest.getTitle()!=null)
             data.setTitle(contest.getTitle());
@@ -72,8 +80,6 @@ public class ContestService {
             data.setStartTime(contest.getStartTime());
         if(contest.getEndTime()!=null)
             data.setEndTime(contest.getEndTime());
-
-
         return responseBuilder.success();
     }
 }

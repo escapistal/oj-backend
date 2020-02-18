@@ -30,7 +30,7 @@ public class Contest implements Serializable {
     private Timestamp updateTime;
     private UserInfo createUser;
     private UserInfo updateUser;
-    List<ContestProblem> problemList;
+//    List<ContestProblem> problemList;
 
     @Id
     @Column(name = "id")
@@ -217,15 +217,16 @@ public class Contest implements Serializable {
         this.updateUser = updateUser;
     }
 
-    @OneToMany(targetEntity = ContestProblem.class)
-    @JoinColumn(name="contest_id")
-    public List<ContestProblem> getProblemList() {
-        return problemList;
-    }
+//    @OneToMany(targetEntity = ContestProblem.class)
+//    @JoinColumn(name="contest_id")
+//    public List<ContestProblem> getProblemList() {
+//        return problemList;
+//    }
+//
+//    public void setProblemList(List<ContestProblem> problemList) {
+//        this.problemList = problemList;
+//    }
 
-    public void setProblemList(List<ContestProblem> problemList) {
-        this.problemList = problemList;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -249,13 +250,11 @@ public class Contest implements Serializable {
                 Objects.equals(createTime, contest.createTime) &&
                 Objects.equals(updateTime, contest.updateTime) &&
                 Objects.equals(createUser, contest.createUser) &&
-                Objects.equals(updateUser, contest.updateUser) &&
-                Objects.equals(problemList, contest.problemList);
+                Objects.equals(updateUser, contest.updateUser);
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(id, sortId, title, description, realTimeRank, password, ruleType, penaltyTime, startTime, endTime, willLock, lockTime, unlockTime, visible, createTime, updateTime, createUser, updateUser, problemList);
+        return Objects.hash(id, sortId, title, description, realTimeRank, password, ruleType, penaltyTime, startTime, endTime, willLock, lockTime, unlockTime, visible, createTime, updateTime, createUser, updateUser);
     }
 }

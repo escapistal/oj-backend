@@ -1,3 +1,7 @@
+drop database if exists onlinejudge;
+create database onlinejudge;
+use onlinejudge;
+
 drop table if exists acm_contest_rank;
 CREATE TABLE acm_contest_rank (
 		id bigint AUTO_INCREMENT,
@@ -67,9 +71,11 @@ CREATE TABLE contest_announcement (
     title text NOT NULL COMMENT '公告标题',
     content text NOT NULL COMMENT '公告内容',
 		visible bit NOT NULL COMMENT '可见性',
-		visible_id bigint DEFAULT 0 NOT NULL COMMENT '可见的人id，默认0为全部',
+-- 		visible_id bigint DEFAULT 0 NOT NULL COMMENT '可见的人id，默认0为全部',
     create_time timestamp NOT NULL COMMENT '创建时间',
-    create_id bigint NOT NULL COMMENT '创建人',
+    update_time timestamp COMMENT '最后一次更新时间',
+		create_id bigint	NOT NULL COMMENT '创建人',
+    update_id bigint COMMENT '最后一次更新人',
 		PRIMARY KEY (id)
 );
 
@@ -77,7 +83,7 @@ drop table if exists clarification;
 CREATE TABLE clarification (
     id bigint AUTO_INCREMENT,
 		contest_id bigint NOT NULL COMMENT '比赛id',
-		problem_id bigint NOT NULL COMMENT '对应的赛题id,0则为General problem',
+		problem_id bigint NOT NULL COMMENT '对应的赛题id,0则为General clarification',
 		content text NOT NULL COMMENT '提问内容',
 		create_id bigint NOT NULL COMMENT '提问人id',
     create_time timestamp NOT NULL COMMENT '提问时间',
@@ -88,9 +94,9 @@ drop table if exists clarification_reply;
 CREATE TABLE clarification_reply (
     id bigint AUTO_INCREMENT,
 		clar_id bigint NOT NULL COMMENT '对应的clarification id',
-		content text NOT NULL COMMENT '提问内容',
-		create_id bigint NOT NULL COMMENT '提问人id',
-    create_time timestamp NOT NULL COMMENT '提问时间',
+		content text NOT NULL COMMENT '回复内容',
+		create_id bigint NOT NULL COMMENT '回复人id',
+    create_time timestamp NOT NULL COMMENT '回复时间',
 		PRIMARY KEY (id)
 );
 
@@ -103,10 +109,11 @@ CREATE TABLE problem (
     description text NOT NULL COMMENT '问题描述',
     input_description text NOT NULL COMMENT '输入描述',
     output_description text NOT NULL COMMENT '输出描述',
-    samples json NOT NULL COMMENT '样例们[{"input":"...","output":"..."},...]',
+    sample json NOT NULL COMMENT '样例们[{"input":"...","output":"..."},...]',
     hint text COMMENT '提示信息',
 		test_case_md5 text NOT NULL COMMENT 'testcase的md5,对应到本地的testcase/[md5]文件夹',
     allow_language json NOT NULL COMMENT '[{"language":"C++","factor":1.0},{"language":"Java","factor":2.0},{"language":"Python2","factor":3.0},{"language":"Python3","factor":3.0}]',
+		tag json COMMENT '["tag1","tag2",...]',
     time_limit int NOT NULL COMMENT '时间限制(ms)',
     memory_limit int NOT NULL COMMENT '空间限制(MB)',
     visible bit DEFAULT 1 NOT NULL COMMENT '可见性',
@@ -147,12 +154,12 @@ CREATE TABLE contest_problem (
 );
 
 
-drop table if exists tag;
-CREATE TABLE tag (
-		problem_id bigint NOT NULL COMMENT '问题id',
-    `name` text NOT NULL COMMENT 'tag内容',
-		PRIMARY KEY (problem_id,`name`(50))
-);
+-- drop table if exists tag;
+-- CREATE TABLE tag (
+-- 		problem_id bigint NOT NULL COMMENT '问题id',
+--     `name` text NOT NULL COMMENT 'tag内容',
+-- 		PRIMARY KEY (problem_id,`name`(50))
+-- );
 
 drop table if exists submission;
 CREATE TABLE submission (

@@ -19,10 +19,11 @@ public class Problem implements Serializable {
     private String description;
     private String inputDescription;
     private String outputDescription;
-    private List<HashMap<String,String>> samples;
+    private List<HashMap<String,String>> sample;
     private String hint;
     private String testCaseMd5;
     private List<HashMap<String,String>> allowLanguage;
+    private List<String> tag;
     private Integer timeLimit;
     private Integer memoryLimit;
     private Boolean visible;
@@ -113,13 +114,13 @@ public class Problem implements Serializable {
 
     @Basic
     @Type(type = "json" )
-    @Column(name = "samples",columnDefinition = "json")
-    public List<HashMap<String,String>> getSamples() {
-        return samples;
+    @Column(name = "sample",columnDefinition = "json")
+    public List<HashMap<String,String>> getSample() {
+        return sample;
     }
 
-    public void setSamples( List<HashMap<String,String>> samples) {
-        this.samples = samples;
+    public void setSample(List<HashMap<String,String>> samples) {
+        this.sample = samples;
     }
 
     @Basic
@@ -151,6 +152,17 @@ public class Problem implements Serializable {
 
     public void setAllowLanguage(List<HashMap<String,String>> allowLanguage) {
         this.allowLanguage = allowLanguage;
+    }
+
+    @Basic
+    @Type(type = "json" )
+    @Column(name = "tag",columnDefinition = "json")
+    public List<String> getTag() {
+        return tag;
+    }
+
+    public void setTag(List<String> tag) {
+        this.tag = tag;
     }
 
     @Basic
@@ -314,7 +326,7 @@ public class Problem implements Serializable {
                 Objects.equals(description, problem.description) &&
                 Objects.equals(inputDescription, problem.inputDescription) &&
                 Objects.equals(outputDescription, problem.outputDescription) &&
-                Objects.equals(samples, problem.samples) &&
+                Objects.equals(sample, problem.sample) &&
                 Objects.equals(hint, problem.hint) &&
                 Objects.equals(testCaseMd5, problem.testCaseMd5) &&
                 Objects.equals(allowLanguage, problem.allowLanguage) &&
@@ -336,6 +348,6 @@ public class Problem implements Serializable {
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, sortId, title, description, inputDescription, outputDescription, samples, hint, testCaseMd5, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, createTime, updateTime, spj, spjLanguage, spjCode, spjMd5, createUser, updateUser);
+        return Objects.hash(id, sortId, title, description, inputDescription, outputDescription, sample, hint, testCaseMd5, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, createTime, updateTime, spj, spjLanguage, spjCode, spjMd5, createUser, updateUser);
     }
 }

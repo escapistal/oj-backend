@@ -7,7 +7,6 @@ import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.FTPUtil;
 import com.xc.oj.util.ZipUtil;
-import jdk.internal.util.xml.impl.Input;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -81,8 +80,8 @@ public class ProblemService {
         if (prob.getHint() != null)
             data.setHint(prob.getHint());
 
-        if (prob.getSamples() != null)
-            data.setSamples(prob.getSamples());
+        if (prob.getSample() != null)
+            data.setSample(prob.getSample());
         if (prob.getTestCaseMd5() != null)
             data.setTestCaseMd5(prob.getTestCaseMd5());
         if (prob.getAllowLanguage() != null)

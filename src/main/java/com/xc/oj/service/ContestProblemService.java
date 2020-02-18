@@ -44,7 +44,7 @@ public class ContestProblemService {
     public responseBase<String> update(long id, ContestProblem contestProblem){
         ContestProblem data=contestProblemRepository.findById(id).orElse(null);
         if(data==null)
-            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+            return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
         if(contestProblem.getAllowLanguage()!=null)
             data.setAllowLanguage(contestProblem.getAllowLanguage());
         if(contestProblem.getProblem()!=null)
@@ -60,8 +60,7 @@ public class ContestProblemService {
     }
 
     public responseBase<String> delete(Long id){
-        ContestProblem contestProblem=contestProblemRepository.findById(id).orElse(null);
-        if(contestProblem==null)
+        if(!contestProblemRepository.existsById(id))
             return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
         contestProblemRepository.deleteById(id);
         return responseBuilder.success();
