@@ -53,6 +53,12 @@ public class ContestProblemService {
             data.setShortname(contestProblem.getShortname());
         if(contestProblem.getSortId()!=null)
             data.setSortId(contestProblem.getSortId());
+        if(contestProblem.getAllowLanguage()!=null)
+            data.setAllowLanguage(contestProblem.getAllowLanguage());
+        if(contestProblem.getTimeLimit()!=null)
+            data.setTimeLimit(contestProblem.getTimeLimit());
+        if(contestProblem.getMemoryLimit()!=null)
+            data.setMemoryLimit(contestProblem.getMemoryLimit());
         if(contestProblem.getVisible()!=null)
             data.setVisible(contestProblem.getVisible());
         contestProblemRepository.save(data);

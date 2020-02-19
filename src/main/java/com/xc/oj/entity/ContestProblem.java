@@ -18,6 +18,8 @@ public class ContestProblem implements Serializable{
     private Problem problem;
     private String shortname;
     private List<HashMap<String,String>> allowLanguage;
+    private Integer timeLimit;
+    private Integer memoryLimit;
     private Boolean visible;
     private Integer submissionNumber;
     private Integer acceptedNumber;
@@ -26,7 +28,7 @@ public class ContestProblem implements Serializable{
     private Timestamp createTime;
     private Timestamp updateTime;
     private UserInfo createUser;
-    private UserInfo  updateUser;
+    private UserInfo updateUser;
 
     @Id
     @Column(name = "id")
@@ -90,6 +92,27 @@ public class ContestProblem implements Serializable{
         this.allowLanguage = allowLanguage;
     }
 
+
+    @Basic
+    @Column(name = "time_limit")
+    public Integer getTimeLimit() {
+        return timeLimit;
+    }
+
+    public void setTimeLimit(Integer timeLimit) {
+        this.timeLimit = timeLimit;
+    }
+
+    @Basic
+    @Column(name = "memory_limit")
+    public Integer getMemoryLimit() {
+        return memoryLimit;
+    }
+
+    public void setMemoryLimit(Integer memoryLimit) {
+        this.memoryLimit = memoryLimit;
+    }
+
     @Basic
     @Column(name = "visible")
     public Boolean getVisible() {
@@ -128,34 +151,6 @@ public class ContestProblem implements Serializable{
 
     public void setSubmissionNumberLocked(Integer submissionNumberLocked) {
         this.submissionNumberLocked = submissionNumberLocked;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ContestProblem)) return false;
-        ContestProblem that = (ContestProblem) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(contestId, that.contestId) &&
-                Objects.equals(sortId, that.sortId) &&
-                Objects.equals(problem, that.problem) &&
-                Objects.equals(shortname, that.shortname) &&
-                Objects.equals(allowLanguage, that.allowLanguage) &&
-                Objects.equals(visible, that.visible) &&
-                Objects.equals(submissionNumber, that.submissionNumber) &&
-                Objects.equals(acceptedNumber, that.acceptedNumber) &&
-                Objects.equals(submissionNumberLocked, that.submissionNumberLocked) &&
-                Objects.equals(acceptedNumberLocked, that.acceptedNumberLocked) &&
-                Objects.equals(createTime, that.createTime) &&
-                Objects.equals(updateTime, that.updateTime) &&
-                Objects.equals(createUser, that.createUser) &&
-                Objects.equals(updateUser, that.updateUser);
-    }
-
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(id, contestId, sortId, problem, shortname, allowLanguage, visible, submissionNumber, acceptedNumber, submissionNumberLocked, acceptedNumberLocked, createTime, updateTime, createUser, updateUser);
     }
 
     @Basic
@@ -208,5 +203,32 @@ public class ContestProblem implements Serializable{
         this.updateUser = updateUser;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ContestProblem)) return false;
+        ContestProblem that = (ContestProblem) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(contestId, that.contestId) &&
+                Objects.equals(sortId, that.sortId) &&
+                Objects.equals(problem, that.problem) &&
+                Objects.equals(shortname, that.shortname) &&
+                Objects.equals(allowLanguage, that.allowLanguage) &&
+                Objects.equals(timeLimit, that.timeLimit) &&
+                Objects.equals(memoryLimit, that.memoryLimit) &&
+                Objects.equals(visible, that.visible) &&
+                Objects.equals(submissionNumber, that.submissionNumber) &&
+                Objects.equals(acceptedNumber, that.acceptedNumber) &&
+                Objects.equals(submissionNumberLocked, that.submissionNumberLocked) &&
+                Objects.equals(acceptedNumberLocked, that.acceptedNumberLocked) &&
+                Objects.equals(createTime, that.createTime) &&
+                Objects.equals(updateTime, that.updateTime) &&
+                Objects.equals(createUser, that.createUser) &&
+                Objects.equals(updateUser, that.updateUser);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, contestId, sortId, problem, shortname, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, submissionNumberLocked, acceptedNumberLocked, createTime, updateTime, createUser, updateUser);
+    }
 }

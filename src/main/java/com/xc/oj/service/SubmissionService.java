@@ -1,9 +1,6 @@
 package com.xc.oj.service;
 
-import com.xc.oj.entity.ContestProblem;
-import com.xc.oj.entity.JudgeTask;
-import com.xc.oj.entity.Problem;
-import com.xc.oj.entity.Submission;
+import com.xc.oj.entity.*;
 import com.xc.oj.repository.ContestProblemRepository;
 import com.xc.oj.repository.ProblemRepository;
 import com.xc.oj.repository.SubmissionRepository;
@@ -40,7 +37,7 @@ public class SubmissionService {
         submission.setExecuteMemory(0);
         if(submission.getContestId()==null)
             submission.setContestId(0L);
-
+        //TODO judgeTask的时空限制字段未给出，参考updateResult
         JudgeTask judgeTask=new JudgeTask();
         judgeTask.setSubmissionId(submission.getId());
         judgeTask.setLanguage(submission.getLanguage());
@@ -65,5 +62,48 @@ public class SubmissionService {
 
     public responseBase<List<Submission>> listAll() {
         return responseBuilder.success(submissionRepository.findAll());
+    }
+
+    public void updateResult(JudgeResult judgeResult) {
+        Long sid=judgeResult.getSubmissionId();
+        Submission submission=submissionRepository.findById(sid).orElse(null);
+        Long cid=submission.getContestId();
+        Long pid=submission.getProblemId();
+        ContestProblem contestProblem;
+        Problem problem;
+        Integer timeLimit;
+        Integer memoryLimit;
+        List<HashMap<String,String>> allowLanguage;
+        if(cid!=0){//赛题
+            contestProblem=contestProblemRepository.findById(pid).orElse(null);
+            problem=contestProblem.getProblem();
+            timeLimit=contestProblem.getTimeLimit();
+            memoryLimit=contestProblem.getMemoryLimit();
+            allowLanguage=contestProblem.getAllowLanguage();
+            if(timeLimit==0)
+                timeLimit=problem.getTimeLimit();
+            if(memoryLimit==0)
+                memoryLimit=problem.getMemoryLimit();
+            if(allowLanguage==null||allowLanguage.isEmpty())
+                allowLanguage=problem.getAllowLanguage();
+        }
+        else {
+            problem = problemRepository.findById(pid).orElse(null);
+            timeLimit=problem.getTimeLimit();
+            memoryLimit=problem.getMemoryLimit();
+            allowLanguage=problem.getAllowLanguage();
+        }
+        for(HashMap<String,String> mp:allowLanguage) {
+            if(mp.get("language").equals(submission.getLanguage())) {
+                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("factor")));
+                break;
+            }
+        }
+        //TODO 根据detail修改评测结果，字段待约定
+        for (Map<String, String> mp : judgeResult.getDetail()) {
+            for (String key : mp.keySet())
+                System.out.println(key + " " + mp.get(key));
+        }
+
     }
 }
