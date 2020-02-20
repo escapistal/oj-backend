@@ -30,6 +30,7 @@ public class ContestService {
 
     public responseBase<String> add(Contest contest){
         contest.setCreateTime(new Timestamp(new Date().getTime()));
+        contest.setUpdateTime(new Timestamp(new Date().getTime()));
         System.out.println(contest.getLockTime());
         contestRepository.save(contest);
         return responseBuilder.success();

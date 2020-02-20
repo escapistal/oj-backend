@@ -23,6 +23,7 @@ public class ContestProblemService {
 
     public responseBase<String> add(long cid,ContestProblem contestProblem){
         contestProblem.setCreateTime(new Timestamp(new Date().getTime()));
+        contestProblem.setUpdateTime(new Timestamp(new Date().getTime()));
         contestProblem.setContestId(cid);
         contestProblem.setAcceptedNumber(0);
         contestProblem.setSubmissionNumber(0);

@@ -16,20 +16,23 @@ import java.util.*;
 
 @Service
 public class SubmissionService {
-    @Autowired
-    private SubmissionRepository submissionRepository;
+    private final SubmissionRepository submissionRepository;
 
-    @Autowired
-    private ProblemRepository problemRepository;
+    private final ProblemRepository problemRepository;
 
-    @Autowired
-    private ContestProblemRepository contestProblemRepository;
+    private final ContestProblemRepository contestProblemRepository;
 
-    @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private final RedisTemplate<String,Object> redisTemplate;
+
+    public SubmissionService(SubmissionRepository submissionRepository, ProblemRepository problemRepository, ContestProblemRepository contestProblemRepository, RedisTemplate<String, Object> redisTemplate) {
+        this.submissionRepository = submissionRepository;
+        this.problemRepository = problemRepository;
+        this.contestProblemRepository = contestProblemRepository;
+        this.redisTemplate = redisTemplate;
+    }
 
     public responseBase<String> submit(Submission submission){
-        submission.setStatus(0);
+        submission.setStatus(JudgeResultEnum.PENDING);
         submission.setCodeLength(submission.getCode().length());
         submission.setDetail(new ArrayList<>());
         submission.setCreateTime(new Timestamp(new Date().getTime()));
@@ -37,22 +40,51 @@ public class SubmissionService {
         submission.setExecuteMemory(0);
         if(submission.getContestId()==null)
             submission.setContestId(0L);
-        //TODO judgeTask的时空限制字段未给出，参考updateResult
+        submissionRepository.save(submission);
+        Long cid=submission.getContestId();
+        Long pid=submission.getProblemId();
+        ContestProblem contestProblem;
+        Problem problem;
+        Integer timeLimit;
+        Integer memoryLimit;
+        List<HashMap<String,String>> allowLanguage;
+        if(cid!=0) {
+            contestProblem=contestProblemRepository.findById(pid).orElse(null);
+            if(contestProblem==null)
+                return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
+            problem=contestProblem.getProblem();
+            timeLimit=contestProblem.getTimeLimit();
+            memoryLimit=contestProblem.getMemoryLimit();
+            allowLanguage=contestProblem.getAllowLanguage();
+            if(timeLimit==null||timeLimit==0)
+                timeLimit=problem.getTimeLimit();
+            if(memoryLimit==null||memoryLimit==0)
+                memoryLimit=problem.getMemoryLimit();
+            if(allowLanguage==null||allowLanguage.isEmpty())
+                allowLanguage=problem.getAllowLanguage();
+        }
+        else {
+            problem = problemRepository.findById(pid).orElse(null);
+            if(problem==null)
+                return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
+            timeLimit=problem.getTimeLimit();
+            memoryLimit=problem.getMemoryLimit();
+            allowLanguage=problem.getAllowLanguage();
+        }
+        for(HashMap<String,String> mp:allowLanguage) {
+            if(mp.get("language").equals(submission.getLanguage())) {
+                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("factor")));
+                break;
+            }
+        }
         JudgeTask judgeTask=new JudgeTask();
+        //TODO LazyEval应在config读取
+        judgeTask.setLazyEval(false);
         judgeTask.setSubmissionId(submission.getId());
         judgeTask.setLanguage(submission.getLanguage());
         judgeTask.setCode(submission.getCode());
-        Long pid=submission.getProblemId();
-        if(submission.getContestId()!=0) {
-            ContestProblem contestProblem=contestProblemRepository.findById(pid).orElse(null);
-            if(contestProblem==null)
-                return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
-            pid = contestProblem.getProblem().getId();
-        }
-        Problem problem=problemRepository.findById(pid).orElse(null);
-        if(problem==null)
-            return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
-        submissionRepository.save(submission);
+        judgeTask.setTimeLimit(timeLimit);
+        judgeTask.setMemoryLimit(memoryLimit);
         judgeTask.setTestcaseMd5(problem.getTestCaseMd5());
         if(problem.getSpj())
             judgeTask.setSpjMd5(problem.getSpjMd5());
@@ -67,43 +99,44 @@ public class SubmissionService {
     public void updateResult(JudgeResult judgeResult) {
         Long sid=judgeResult.getSubmissionId();
         Submission submission=submissionRepository.findById(sid).orElse(null);
+        assert submission != null;
         Long cid=submission.getContestId();
         Long pid=submission.getProblemId();
         ContestProblem contestProblem;
         Problem problem;
-        Integer timeLimit;
-        Integer memoryLimit;
-        List<HashMap<String,String>> allowLanguage;
         if(cid!=0){//赛题
             contestProblem=contestProblemRepository.findById(pid).orElse(null);
             problem=contestProblem.getProblem();
-            timeLimit=contestProblem.getTimeLimit();
-            memoryLimit=contestProblem.getMemoryLimit();
-            allowLanguage=contestProblem.getAllowLanguage();
-            if(timeLimit==0)
-                timeLimit=problem.getTimeLimit();
-            if(memoryLimit==0)
-                memoryLimit=problem.getMemoryLimit();
-            if(allowLanguage==null||allowLanguage.isEmpty())
-                allowLanguage=problem.getAllowLanguage();
         }
         else {
             problem = problemRepository.findById(pid).orElse(null);
-            timeLimit=problem.getTimeLimit();
-            memoryLimit=problem.getMemoryLimit();
-            allowLanguage=problem.getAllowLanguage();
         }
-        for(HashMap<String,String> mp:allowLanguage) {
-            if(mp.get("language").equals(submission.getLanguage())) {
-                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("factor")));
-                break;
+        //TODO 根据detail修改评测结果，待完善，需通知前端，修改榜单/题目统计AC数等
+        Integer maxExecTime=0;
+        Integer maxExecMemory=0;
+        JudgeResultEnum firstErr=null;
+        int err=0,pe=0;
+        for (SingleJudgeResult res : judgeResult.getDetail()) {
+            maxExecTime=Math.max(maxExecTime,res.getExecTime());
+            maxExecMemory=Math.max(maxExecMemory,res.getExecMemory());
+            if(res.getResult()!=JudgeResultEnum.AC){
+                ++err;
+                if(res.getResult()==JudgeResultEnum.PE)
+                    ++pe;
+                if(firstErr==null&&res.getResult()!=JudgeResultEnum.PE)
+                    firstErr=res.getResult();
             }
         }
-        //TODO 根据detail修改评测结果，字段待约定
-        for (Map<String, String> mp : judgeResult.getDetail()) {
-            for (String key : mp.keySet())
-                System.out.println(key + " " + mp.get(key));
-        }
-
+        if(err==0)//AC
+            submission.setStatus(JudgeResultEnum.AC);
+        else if(err==pe)//PE
+            submission.setStatus(JudgeResultEnum.PE);
+        else
+            submission.setStatus(firstErr);
+        submission.setDetail(judgeResult.getDetail());
+        submission.setExecuteTime(maxExecTime);
+        submission.setExecuteMemory(maxExecMemory);
+        submission.setJudgeTime(new Timestamp(new Date().getTime()));
+        submissionRepository.save(submission);
     }
 }

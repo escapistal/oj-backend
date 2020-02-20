@@ -18,11 +18,11 @@ public class Submission implements Serializable{
     private String language;
     private String code;
     private Timestamp createTime;
-    private Integer status;
+    private JudgeResultEnum status;
     private Integer executeTime;
     private Integer executeMemory;
     private Integer codeLength;
-    private List<HashMap<String,String>> detail;
+    private List<SingleJudgeResult> detail;
     private Timestamp judgeTime;
 
     @Id
@@ -98,11 +98,11 @@ public class Submission implements Serializable{
 
     @Basic
     @Column(name = "status")
-    public Integer getStatus() {
+    public JudgeResultEnum getStatus() {
         return status;
     }
 
-    public void setStatus(Integer status) {
+    public void setStatus(JudgeResultEnum status) {
         this.status = status;
     }
 
@@ -139,11 +139,11 @@ public class Submission implements Serializable{
     @Basic
     @Type(type = "json" )
     @Column(name = "detail", columnDefinition = "json")
-    public List<HashMap<String,String>> getDetail() {
+    public List<SingleJudgeResult> getDetail() {
         return detail;
     }
 
-    public void setDetail(List<HashMap<String,String>> detail) {
+    public void setDetail(List<SingleJudgeResult> detail) {
         this.detail = detail;
     }
 
