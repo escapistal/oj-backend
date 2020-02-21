@@ -5,6 +5,7 @@ import com.xc.oj.repository.*;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.OJPropertiesUtil;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -87,8 +88,7 @@ public class SubmissionService {
             }
         }
         JudgeTask judgeTask=new JudgeTask();
-        //TODO LazyEval应在config读取
-        judgeTask.setLazyEval(false);
+        judgeTask.setLazyEval(Boolean.parseBoolean(OJPropertiesUtil.get("lazy-eval")));
         judgeTask.setSubmissionId(submission.getId());
         judgeTask.setLanguage(submission.getLanguage());
         judgeTask.setCode(submission.getCode());
@@ -171,7 +171,7 @@ public class SubmissionService {
                         info=new SingleSubmissionInfo();
                     info.setAc(true);
                     info.setAcTime((int)((submission.getCreateTime().getTime()-contest.getStartTime().getTime())/1000));
-                    acmContestRank.setTotalTime(acmContestRank.getTotalTime()+info.getError()*20*60+info.getAcTime());//TODO 全局配置罚时时间
+                    acmContestRank.setTotalTime(acmContestRank.getTotalTime()+info.getError()* Integer.parseInt(OJPropertiesUtil.get("penalty_time")) +info.getAcTime());//TODO 全局配置罚时时间
                     acmContestRank.getSubmissionInfo().put(pid,info);
                     if (!contest.getWillLock() || submission.getCreateTime().before(contest.getLockTime())) {//不封榜或未到封榜时间
                         contestProblem.setSubmissionNumberLocked(contestProblem.getSubmissionNumberLocked() + 1);

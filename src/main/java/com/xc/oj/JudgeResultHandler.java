@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -19,7 +18,7 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
     SubmissionService submissionService;
 
     @Override
-    public void run(){
+    public void run() {
         while (true){
             try {
                 JudgeResult judgeResult = (JudgeResult) redisTemplate.opsForList().rightPop("JudgeResult", 0, TimeUnit.SECONDS);
