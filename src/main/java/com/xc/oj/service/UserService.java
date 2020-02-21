@@ -2,12 +2,10 @@ package com.xc.oj.service;
 
 import com.xc.oj.entity.Problem;
 import com.xc.oj.entity.User;
-import com.xc.oj.repository.ProblemRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.repository.UserRepository;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,19 +18,32 @@ import java.util.regex.Pattern;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ProblemRepository problemRepository;
+
+    private final UserRepository userRepository;
+    private final ProblemService problemService;
 
     private BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
     private Pattern passwordPattern=Pattern.compile("^[\\w~`!@#$%^&*()_+-=/?\\|<>,.;\\[\\]{}'\":]{6,16}$");
     private Pattern usernamePattern=Pattern.compile("^[\\w]{3,16}$");
     private Pattern emailPattern=Pattern.compile("^[\\w-]+@[\\w.-]+$");
 
+    public UserService(UserRepository userRepository, ProblemService problemService) {
+        this.userRepository = userRepository;
+        this.problemService = problemService;
+    }
+
+    public Optional<User> findById(Long id){
+        return userRepository.findById(id);
+    }
+
+    public void save(User user){
+        userRepository.save(user);
+    }
+
     public responseBase<List<User>> listAll(){
         return responseBuilder.success(userRepository.findAll());
     }
+
     public responseBase<String> register(User user) {
         if (!usernamePattern.matcher(user.getUsername()).matches())
             return responseBuilder.fail(responseCode.USERNAME_INVALID);
@@ -57,6 +68,7 @@ public class UserService {
         userRepository.save(user);
         return responseBuilder.success();
     }
+
     public responseBase<String> login(String username, String password) {
         List<User> users=userRepository.findByUsername(username);
         if(users.isEmpty()||!encoder.matches(password,users.get(0).getPassword()))
@@ -67,6 +79,7 @@ public class UserService {
         userRepository.save(users.get(0));
         return responseBuilder.success();
     }
+
     public responseBase<String> update(long id, User user){
         User data=userRepository.findById(id).orElse(null);
         if(data==null)
@@ -86,11 +99,12 @@ public class UserService {
         userRepository.save(data);
         return responseBuilder.success();
     }
+
     public responseBase<String> add_submission_result(long uid,long pid,boolean isAc){//是题库的pid，比赛走add_contest_submission_accepted
         User user=userRepository.findById(uid).orElse(null);
         if(user==null)
             return responseBuilder.fail(responseCode.USER_NOT_EXIST);
-        Problem prob=problemRepository.findById(pid).orElse(null);
+        Problem prob=problemService.findById(pid).orElse(null);
         if(prob==null)
             return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
         if(isAc) {
@@ -105,7 +119,7 @@ public class UserService {
         user.setSubmissionNumber(user.getSubmissionNumber()+1);
         prob.setSubmissionNumber(prob.getSubmissionNumber()+1);
         userRepository.save(user);
-        problemRepository.save(prob);
+        problemService.save(prob);
         return responseBuilder.success();
     }
 

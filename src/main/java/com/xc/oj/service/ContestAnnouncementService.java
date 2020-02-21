@@ -1,27 +1,38 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.ContestAnnouncement;
-import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.repository.ContestAnnouncementRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContestAnnouncementService {
-    @Autowired
-    private ContestAnnouncementRepository contestAnnouncementRepository;
+    private final ContestAnnouncementRepository contestAnnouncementRepository;
+
+    public ContestAnnouncementService(ContestAnnouncementRepository contestAnnouncementRepository) {
+        this.contestAnnouncementRepository = contestAnnouncementRepository;
+    }
+
+    public Optional<ContestAnnouncement> findById(Long id){
+        return contestAnnouncementRepository.findById(id);
+    }
+
+    public void save(ContestAnnouncement contestAnnouncement){
+        contestAnnouncementRepository.save(contestAnnouncement);
+    }
+
     public responseBase<List<ContestAnnouncement>> findByContestId(Long cid){
         return responseBuilder.success(contestAnnouncementRepository.findByContestId(cid));
     }
 
-    public responseBase<ContestAnnouncement> findById(Long id) {
+    public responseBase<ContestAnnouncement> get(Long id) {
         ContestAnnouncement contestAnnouncement=contestAnnouncementRepository.findById(id).orElse(null);
         if(contestAnnouncement==null)
             return responseBuilder.fail(responseCode.CONTEST_ANNOUNCEMENT_NOT_EXIST);

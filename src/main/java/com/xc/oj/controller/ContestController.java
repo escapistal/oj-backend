@@ -5,7 +5,6 @@ import com.xc.oj.entity.ContestAnnouncement;
 import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ContestService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +12,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/contest")
 public class ContestController {
-    @Autowired
-    ContestService contestService;
+    private final ContestService contestService;
+
+    public ContestController(ContestService contestService) {
+        this.contestService = contestService;
+    }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<List<Contest>> listAll() {

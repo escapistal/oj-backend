@@ -14,15 +14,27 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContestService {
-    @Autowired
-    ContestRepository contestRepository;
-    @Autowired
-    ContestProblemService contestProblemService;
-    @Autowired
-    ContestAnnouncementService contestAnnouncementService;
+    private final ContestRepository contestRepository;
+    private final ContestProblemService contestProblemService;
+    private final ContestAnnouncementService contestAnnouncementService;
+
+    public ContestService(ContestRepository contestRepository, ContestProblemService contestProblemService, ContestAnnouncementService contestAnnouncementService) {
+        this.contestRepository = contestRepository;
+        this.contestProblemService = contestProblemService;
+        this.contestAnnouncementService = contestAnnouncementService;
+    }
+
+    public Optional<Contest> findById(Long id){
+        return contestRepository.findById(id);
+    }
+
+    public void save(Contest contest){
+        contestRepository.save(contest);
+    }
 
     public responseBase<List<Contest>> listAll(){
         return responseBuilder.success(contestRepository.findAll());

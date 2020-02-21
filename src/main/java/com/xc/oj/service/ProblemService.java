@@ -22,8 +22,20 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class ProblemService {
-    @Autowired
-    private ProblemRepository problemRepository;
+
+    private final ProblemRepository problemRepository;
+
+    public ProblemService(ProblemRepository problemRepository) {
+        this.problemRepository = problemRepository;
+    }
+
+    public Optional<Problem> findById(Long id){
+        return problemRepository.findById(id);
+    }
+
+    public void save(Problem problem){
+        problemRepository.save(problem);
+    }
 
     public responseBase<List<Problem>> listAll() {
         return responseBuilder.success(problemRepository.findAll());
@@ -33,7 +45,7 @@ public class ProblemService {
         return responseBuilder.success(problemRepository.findByVisibleTrue());
     }
 
-    public responseBase<Problem> findById(long id){
+    public responseBase<Problem> get(long id){
         Problem prob=problemRepository.findById(id).orElse(null);
         if(prob==null)
             return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);

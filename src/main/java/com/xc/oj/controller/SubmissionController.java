@@ -3,19 +3,18 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.Submission;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.SubmissionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/submission")
 public class SubmissionController {
-    @Autowired
-    SubmissionService submissionService;
+    private final SubmissionService submissionService;
+
+    public SubmissionController(SubmissionService submissionService) {
+        this.submissionService = submissionService;
+    }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<List<Submission>> listAll(){

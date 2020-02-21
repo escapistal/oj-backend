@@ -3,23 +3,19 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.Problem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ProblemService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @RestController
 @RequestMapping("/api/problem")
 public class ProblemController {
-    @Autowired
-    ProblemService problemService;
+    private final ProblemService problemService;
+
+    public ProblemController(ProblemService problemService) {
+        this.problemService = problemService;
+    }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<List<Problem>> list_visible() {
@@ -32,8 +28,8 @@ public class ProblemController {
     }
 
     @RequestMapping(value = "/{id}",method = RequestMethod.GET)
-    public responseBase<Problem> findById(@PathVariable long id){
-        return problemService.findById(id);
+    public responseBase<Problem> get(@PathVariable long id){
+        return problemService.get(id);
     }
 
     @RequestMapping(value = "/add", method = RequestMethod.POST)

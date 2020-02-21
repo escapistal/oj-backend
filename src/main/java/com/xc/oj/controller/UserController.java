@@ -3,7 +3,6 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.User;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,8 +10,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-    @Autowired
-    UserService userService;
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<List<User>> listAll(){

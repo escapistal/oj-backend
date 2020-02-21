@@ -14,23 +14,31 @@ import java.util.*;
 @Service
 public class SubmissionService {
     private final SubmissionRepository submissionRepository;
-    private final ContestRepository contestRepository;
-    private final ContestProblemRepository contestProblemRepository;
-    private final ProblemRepository problemRepository;
-    private final UserRepository userRepository;
-    private final AcmContestRankRepository acmContestRankRepository;
+    private final ContestService contestService;
+    private final ContestProblemService contestProblemService;
+    private final ProblemService problemService;
+    private final UserService userService;
+    private final AcmContestRankService acmContestRankService;
     private final RedisTemplate<String,Object> redisTemplate;
 
-    public SubmissionService(SubmissionRepository submissionRepository, ContestRepository contestRepository, ContestProblemRepository contestProblemRepository, ProblemRepository problemRepository, UserRepository userRepository, AcmContestRankRepository acmContestRankRepository, RedisTemplate<String, Object> redisTemplate) {
+    public SubmissionService(SubmissionRepository submissionRepository, ContestService contestService, ContestProblemService contestProblemService, ProblemService problemService, UserService userService, AcmContestRankService acmContestRankService, RedisTemplate<String, Object> redisTemplate) {
         this.submissionRepository = submissionRepository;
-        this.contestRepository = contestRepository;
-        this.contestProblemRepository = contestProblemRepository;
-        this.problemRepository = problemRepository;
-        this.userRepository = userRepository;
-        this.acmContestRankRepository = acmContestRankRepository;
+        this.contestService = contestService;
+        this.contestProblemService = contestProblemService;
+        this.problemService = problemService;
+        this.userService = userService;
+        this.acmContestRankService = acmContestRankService;
         this.redisTemplate = redisTemplate;
     }
 
+
+    public Optional<Submission> findById(Long id){
+        return submissionRepository.findById(id);
+    }
+
+    public void save(Submission submission){
+        submissionRepository.save(submission);
+    }
 
     public responseBase<String> submit(Submission submission){
         submission.setStatus(JudgeResultEnum.PENDING);
@@ -50,7 +58,7 @@ public class SubmissionService {
         Integer memoryLimit;
         List<HashMap<String,String>> allowLanguage;
         if(cid!=0) {
-            contestProblem=contestProblemRepository.findById(pid).orElse(null);
+            contestProblem=contestProblemService.findById(pid).orElse(null);
             if(contestProblem==null)
                 return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
             problem=contestProblem.getProblem();
@@ -65,7 +73,7 @@ public class SubmissionService {
                 allowLanguage=problem.getAllowLanguage();
         }
         else {
-            problem = problemRepository.findById(pid).orElse(null);
+            problem = problemService.findById(pid).orElse(null);
             if(problem==null)
                 return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
             timeLimit=problem.getTimeLimit();
@@ -136,10 +144,10 @@ public class SubmissionService {
         AcmContestRank acmContestRank,acmContestRankLocked;
         SingleSubmissionInfo info;
         if(cid!=0) {//赛题
-            contest = contestRepository.findById(cid).orElse(null);
-            contestProblem = contestProblemRepository.findById(pid).orElse(null);
-            acmContestRank = acmContestRankRepository.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), false).orElse(null);
-            acmContestRankLocked = acmContestRankRepository.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), true).orElse(null);
+            contest = contestService.findById(cid).orElse(null);
+            contestProblem = contestProblemService.findById(pid).orElse(null);
+            acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), false).orElse(null);
+            acmContestRankLocked = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), true).orElse(null);
             if(acmContestRank==null) {
                 acmContestRank = new AcmContestRank();
                 acmContestRank.setLocked(false);
@@ -197,13 +205,13 @@ public class SubmissionService {
                     }
                 }
             }
-            contestProblemRepository.save(contestProblem);
-            acmContestRankRepository.save(acmContestRank);
-            acmContestRankRepository.save(acmContestRankLocked);
+            contestProblemService.save(contestProblem);
+            acmContestRankService.save(acmContestRank);
+            acmContestRankService.save(acmContestRankLocked);
         }
         else {//题库提交
-            problem = problemRepository.findById(pid).orElse(null);
-            User user=userRepository.findById(submission.getUser().getId()).orElse(null);
+            problem = problemService.findById(pid).orElse(null);
+            User user=userService.findById(submission.getUser().getId()).orElse(null);
             problem.setSubmissionNumber(problem.getSubmissionNumber()+1);
             user.setSubmissionNumber(user.getSubmissionNumber()+1);
             if(submission.getStatus()==JudgeResultEnum.AC){
@@ -213,8 +221,10 @@ public class SubmissionService {
                     user.setAcceptedNumber(user.getAcceptedId().size());
                 }
             }
-            userRepository.save(user);
-            problemRepository.save(problem);
+            userService.save(user);
+            problemService.save(problem);
         }
     }
 }
+
+

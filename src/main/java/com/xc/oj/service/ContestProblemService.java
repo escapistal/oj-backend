@@ -11,11 +11,23 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContestProblemService {
-    @Autowired
-    ContestProblemRepository contestProblemRepository;
+    private final ContestProblemRepository contestProblemRepository;
+
+    public ContestProblemService(ContestProblemRepository contestProblemRepository) {
+        this.contestProblemRepository = contestProblemRepository;
+    }
+
+    public Optional<ContestProblem> findById(Long id){
+        return contestProblemRepository.findById(id);
+    }
+
+    public void save(ContestProblem contestProblem){
+        contestProblemRepository.save(contestProblem);
+    }
 
     public responseBase<List<ContestProblem>> findByContestId(long id){
         return responseBuilder.success(contestProblemRepository.findByContestId(id));
@@ -35,7 +47,7 @@ public class ContestProblemService {
         return responseBuilder.success();
     }
 
-    public responseBase<ContestProblem> findById(Long id) {
+    public responseBase<ContestProblem> get(Long id) {
         ContestProblem contestProblem=contestProblemRepository.findById(id).orElse(null);
         if(contestProblem==null)
             return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
