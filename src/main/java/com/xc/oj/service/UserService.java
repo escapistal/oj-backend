@@ -94,9 +94,9 @@ public class UserService {
         if(prob==null)
             return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
         if(isAc) {
-            List<Integer> accId = user.getAcceptedId();
+            List<Long> accId = user.getAcceptedId();
             if (!accId.contains(pid)) {
-                accId.add((int) pid);
+                accId.add(pid);
                 user.setAcceptedId(accId);
                 user.setAcceptedNumber(user.getAcceptedNumber() + 1);
                 prob.setAcceptedNumber(prob.getAcceptedNumber() + 1);

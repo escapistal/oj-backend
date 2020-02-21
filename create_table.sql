@@ -11,7 +11,7 @@ CREATE TABLE acm_contest_rank (
 		accepted_number int NOT NULL COMMENT '总AC数',
 		submission_number int NOT NULL COMMENT '有效提交次数',
 		total_time int NOT NULL COMMENT '总用时(秒)', 
-		submission_info json NOT NULL COMMENT '{"问题id":{"is_ac":是否AC,"ac_time":第一次AC的相对时间(秒),"error_number": 罚时次数},...}例如{"9": {"is_ac": false, "ac_time": 0, "error_number": 2}}', 
+		submission_info json NOT NULL COMMENT '{"问题id":{"is_ac":是否AC,"ac_time":第一次AC的相对时间(秒),"error_number": 罚时次数},...}例如{"9": {"is_ac": false, "ac_time": 0, "error_number": 2}}',
 		PRIMARY KEY (id)
 );
 

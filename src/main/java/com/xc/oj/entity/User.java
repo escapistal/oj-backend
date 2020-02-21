@@ -24,7 +24,7 @@ public class User implements Serializable {
     private String nickname;
     private String realname;
     private String avatar;
-    private List<Integer> acceptedId;
+    private List<Long> acceptedId;
     private Integer acceptedNumber;
     private Integer submissionNumber;
 
@@ -142,11 +142,11 @@ public class User implements Serializable {
     @Basic
     @Type(type = "json" )
     @Column(name = "accepted_id",columnDefinition = "json")
-    public List<Integer> getAcceptedId() {
+    public List<Long> getAcceptedId() {
         return acceptedId;
     }
 
-    public void setAcceptedId(List<Integer> acceptedId) {
+    public void setAcceptedId(List<Long> acceptedId) {
         this.acceptedId = acceptedId;
     }
 
