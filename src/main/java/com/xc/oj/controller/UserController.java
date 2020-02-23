@@ -3,12 +3,15 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.User;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.UserService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
+@Api("用户相关接口")
 public class UserController {
     private final UserService userService;
 
@@ -21,6 +24,7 @@ public class UserController {
         return userService.listAll();
     }
 
+    @ApiOperation("用户登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public responseBase<String> login(@RequestBody User user) {
         return userService.login(user.getUsername(),user.getPassword());

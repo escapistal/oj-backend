@@ -3,16 +3,19 @@ package com.xc.oj.entity;
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @TypeDef(name = "json", typeClass = JsonStringType.class)
 @Table(name = "user", schema = "onlinejudge", catalog = "")
-public class User implements Serializable {
+public class User implements Serializable, UserDetails {
     private Long id;
     private String username;
     private String password;
@@ -170,5 +173,34 @@ public class User implements Serializable {
         this.submissionNumber = submissionNumber;
     }
 
+    @Transient
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Transient
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Transient
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Transient
+    @Override
+    public boolean isEnabled() {
+        return !getDisabled();
+    }
+
+    @Transient
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Arrays.asList(new SimpleGrantedAuthority[]{new SimpleGrantedAuthority(type)});
+    }
 
 }

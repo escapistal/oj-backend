@@ -4,6 +4,8 @@ public enum responseCode {
     SUCCESS(0,"成功"),
     FAIL(1,"失败"),
 
+    FORBIDDEN(403,"权限不足"),
+
     USERNAME_INVALID(10001,"用户名不合法"),
     USERNAME_EXISTS(10002,"用户名已存在"),
     PASSWORD_INVALID(10003,"密码不合法"),

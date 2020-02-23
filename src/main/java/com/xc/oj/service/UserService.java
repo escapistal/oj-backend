@@ -6,30 +6,39 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.repository.UserRepository;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.JWTUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
-public class UserService {
+public class UserService  {
 
     private final UserRepository userRepository;
     private final ProblemService problemService;
+    private final AuthenticationManager authenticationManager;
 
     private BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
     private Pattern passwordPattern=Pattern.compile("^[\\w~`!@#$%^&*()_+-=/?\\|<>,.;\\[\\]{}'\":]{6,16}$");
     private Pattern usernamePattern=Pattern.compile("^[\\w]{3,16}$");
     private Pattern emailPattern=Pattern.compile("^[\\w-]+@[\\w.-]+$");
 
-    public UserService(UserRepository userRepository, ProblemService problemService) {
+    public UserService(UserRepository userRepository, ProblemService problemService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.problemService = problemService;
+        this.authenticationManager = authenticationManager;
     }
 
     public Optional<User> findById(Long id){
@@ -63,7 +72,7 @@ public class UserService {
         user.setAcceptedId(new ArrayList<>());
         user.setAcceptedNumber(0);
         user.setSubmissionNumber(0);
-        user.setType("common user");
+        user.setType("user");
         user.setDisabled(false);
         userRepository.save(user);
         return responseBuilder.success();
@@ -71,13 +80,19 @@ public class UserService {
 
     public responseBase<String> login(String username, String password) {
         List<User> users=userRepository.findByUsername(username);
-        if(users.isEmpty()||!encoder.matches(password,users.get(0).getPassword()))
+        if(users.isEmpty())
             return responseBuilder.fail(responseCode.LOGIN_FAIL);
-        if(users.get(0).getDisabled())
-            return responseBuilder.fail(responseCode.USER_BLOCKED);
-        users.get(0).setLastLoginTime(new Timestamp(new Date().getTime()));
-        userRepository.save(users.get(0));
-        return responseBuilder.success();
+        User user=users.get(0);
+        UsernamePasswordAuthenticationToken upToken = new UsernamePasswordAuthenticationToken(username, password);
+        final Authentication authentication = authenticationManager.authenticate(upToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        Map<String,Object> claims=new HashMap<>();
+        claims.put("userId",user.getId());
+        claims.put("userRole",user.getType());
+        final String token = JWTUtil.create(claims);
+        user.setLastLoginTime(new Timestamp(new Date().getTime()));
+        userRepository.save(user);
+        return responseBuilder.success(token);
     }
 
     public responseBase<String> update(long id, User user){
@@ -130,4 +145,5 @@ public class UserService {
         userRepository.deleteById(id);
         return responseBuilder.success();
     }
+
 }
