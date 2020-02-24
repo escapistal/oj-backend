@@ -1,6 +1,9 @@
 package com.xc.oj.entity;
 
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -10,7 +13,7 @@ public class UserInfo {
     private String username;
     private String nickname;
     private String realname;
-    private String type;
+    private List<String> role;
 
     @Id
     @Column(name = "id")
@@ -53,14 +56,16 @@ public class UserInfo {
     }
 
     @Basic
-    @Column(name = "type")
-    public String getType() {
-        return type;
+    @Type(type = "json" )
+    @Column(name = "role",columnDefinition = "json")
+    public List<String> getRole() {
+        return role;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setRole(List<String> role) {
+        this.role = role;
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -71,11 +76,11 @@ public class UserInfo {
                 Objects.equals(username, userInfo.username) &&
                 Objects.equals(nickname, userInfo.nickname) &&
                 Objects.equals(realname, userInfo.realname) &&
-                Objects.equals(type, userInfo.type);
+                Objects.equals(role, userInfo.role);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, username, nickname, realname, type);
+        return Objects.hash(id, username, nickname, realname, role);
     }
 }

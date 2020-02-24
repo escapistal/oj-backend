@@ -5,6 +5,7 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,28 +21,28 @@ public class UserController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public responseBase<List<User>> listAll(){
+    public responseBase<List<User>> listAll() {
         return userService.listAll();
     }
 
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    public responseBase<User> get(@PathVariable Long id){return userService.get(id);}
+
     @ApiOperation("用户登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public responseBase<String> login(@RequestBody User user) {
-        return userService.login(user.getUsername(),user.getPassword());
+    public responseBase<String> login(@RequestParam String username,@RequestParam String password) {
+        return userService.login(username,password);
     }
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public responseBase<String> register(@RequestBody User user) {
-        return userService.register(user);
+    public responseBase<String> register(@RequestParam String username,@RequestParam String password,@RequestParam String email) {
+        return userService.register(username,password,email);
     }
 
+    @PreAuthorize("#id==principal.id")  //常规user只支持修改自己的信息
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
-    public responseBase<String> update(@PathVariable long id, @RequestBody User user) {
+    public responseBase<User> update(@PathVariable long id, @RequestBody User user) {
         return userService.update(id,user);
     }
 
-    @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
-    public responseBase<String> delete(@PathVariable long id) {
-        return userService.delete(id);
-    }
 }

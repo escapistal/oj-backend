@@ -1,6 +1,7 @@
 package com.xc.oj.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
+import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,7 +24,7 @@ public class User implements Serializable, UserDetails {
     private Timestamp lastLoginTime;
     private String email;
     private Boolean disabled;
-    private String type;
+    private List<String> role;
     private String nickname;
     private String realname;
     private String avatar;
@@ -103,13 +104,14 @@ public class User implements Serializable, UserDetails {
     }
 
     @Basic
-    @Column(name = "type")
-    public String getType() {
-        return type;
+    @Type(type = "json" )
+    @Column(name = "role",columnDefinition = "json")
+    public List<String> getRole() {
+        return role;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setRole(List<String> role) {
+        this.role = role;
     }
 
     @Basic
@@ -200,7 +202,9 @@ public class User implements Serializable, UserDetails {
     @Transient
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Arrays.asList(new SimpleGrantedAuthority[]{new SimpleGrantedAuthority(type)});
+        List<SimpleGrantedAuthority> list=new ArrayList<>();
+        role.forEach(r->list.add(new SimpleGrantedAuthority(r)));
+        return list;
     }
 
 }

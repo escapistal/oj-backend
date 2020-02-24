@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true,securedEnabled=true,jsr250Enabled=true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final JWTUserService jwtUserService;
@@ -58,13 +61,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .accessDeniedHandler(authAccessDeniedHandler)
             .and()
             .authorizeRequests()
-            .antMatchers("/api/user/register","/api/user/login").permitAll()
-            .antMatchers("/api/**").hasAuthority("user")
+            .antMatchers("/api/user/register","/api/user/login","/swagger-ui.html").permitAll()
+            .antMatchers("/v2/api-docs").permitAll()
+            .antMatchers("/api/admin/**").hasAuthority("admin")
+//            .antMatchers("/api/**").hasAnyAuthority("user")
             .anyRequest().authenticated();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(jwtUserService).passwordEncoder(passwordEncoder());
+    }
+
+    @Override
+    public void configure(WebSecurity web) {
+        web.ignoring().antMatchers("/webjars/**");
+        web.ignoring().antMatchers("/swagger-resources/**");
     }
 }

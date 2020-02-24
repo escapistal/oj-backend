@@ -20,7 +20,11 @@ public class JWTUserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        List<User> users=userRepository.findByUsername(s);
+        List<User> users;
+        if(s.contains("@"))
+            users=userRepository.findByEmail(s);
+        else
+            users=userRepository.findByUsername(s);
         if(users.isEmpty())
             throw new UsernameNotFoundException("用户名或密码错误");
         return users.get(0);

@@ -6,6 +6,7 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.repository.UserRepository;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +19,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -49,53 +52,59 @@ public class UserService  {
         userRepository.save(user);
     }
 
-    public responseBase<List<User>> listAll(){
-        return responseBuilder.success(userRepository.findAll());
+    public responseBase<List<User>> listAll() {
+        List<User> users=userRepository.findAll();
+        users.forEach(user->user.setPassword(null));
+        return responseBuilder.success(users);
     }
 
-    public responseBase<String> register(User user) {
-        if (!usernamePattern.matcher(user.getUsername()).matches())
+    public responseBase<String> register(String username, String password, String email){
+        return register(username,password,email,Collections.singletonList("user"));
+    }
+
+    public responseBase<String> register(String username, String password, String email,List<String> role) {
+        if (!usernamePattern.matcher(username).matches())
             return responseBuilder.fail(responseCode.USERNAME_INVALID);
-        if (userRepository.existsByUsername(user.getUsername()))
-            return responseBuilder.fail(responseCode.USERNAME_EXISTS);
-        if (!passwordPattern.matcher(user.getPassword()).matches())
+        if (!passwordPattern.matcher(password).matches())
             return responseBuilder.fail(responseCode.PASSWORD_INVALID);
-        if (!emailPattern.matcher(user.getEmail()).matches())
+        if (!emailPattern.matcher(email).matches())
             return responseBuilder.fail(responseCode.EMAIL_INVALID);
-        if (userRepository.existsByEmail(user.getEmail()))
+        if (userRepository.existsByUsername(username))
+            return responseBuilder.fail(responseCode.USERNAME_EXISTS);
+        if (userRepository.existsByEmail(email))
             return responseBuilder.fail(responseCode.EMAIL_EXISTS);
-        user.setPassword(encoder.encode(user.getPassword()));
-        user.setCreateTime(new Timestamp(new Date().getTime()));
-        user.setEmail(user.getEmail());
+        User user=new User();
+        user.setUsername(username);
+        user.setPassword(encoder.encode(password));
+        user.setEmail(email);
         user.setNickname(user.getUsername());
         user.setRealname(user.getUsername());
         user.setAcceptedId(new ArrayList<>());
         user.setAcceptedNumber(0);
         user.setSubmissionNumber(0);
-        user.setType("user");
+        user.setRole(role);
         user.setDisabled(false);
+        user.setCreateTime(new Timestamp(new Date().getTime()));
         userRepository.save(user);
         return responseBuilder.success();
     }
 
     public responseBase<String> login(String username, String password) {
-        List<User> users=userRepository.findByUsername(username);
-        if(users.isEmpty())
-            return responseBuilder.fail(responseCode.LOGIN_FAIL);
-        User user=users.get(0);
         UsernamePasswordAuthenticationToken upToken = new UsernamePasswordAuthenticationToken(username, password);
         final Authentication authentication = authenticationManager.authenticate(upToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         Map<String,Object> claims=new HashMap<>();
+        List<User> users=userRepository.findByUsername(username);
+        User user=users.get(0);
         claims.put("userId",user.getId());
-        claims.put("userRole",user.getType());
+        claims.put("userRole",user.getRole());
         final String token = JWTUtil.create(claims);
         user.setLastLoginTime(new Timestamp(new Date().getTime()));
         userRepository.save(user);
         return responseBuilder.success(token);
     }
 
-    public responseBase<String> update(long id, User user){
+    public responseBase<User> update(long id, User user){
         User data=userRepository.findById(id).orElse(null);
         if(data==null)
             return responseBuilder.fail(responseCode.USER_NOT_EXIST);
@@ -107,12 +116,15 @@ public class UserService  {
             data.setNickname(user.getNickname());
         if(user.getRealname()!=null)
             data.setRealname(user.getRealname());
-//        if(user.getType()!=null)                  这些似乎是管理员接口的权限，只允许修改个人信息
-//            data.setType(user.getType());
-//        if(user.getDisabled()!=null)
-//            data.setDisabled(user.getDisabled());
+        if(AuthUtil.has("admin")){//拥有admin权限才能修改以下字段
+            if(user.getRole()!=null)
+                data.setRole(user.getRole());
+            if(user.getDisabled()!=null)
+                data.setDisabled(user.getDisabled());
+        }
         userRepository.save(data);
-        return responseBuilder.success();
+        data.setPassword(null);
+        return responseBuilder.success(data);
     }
 
     public responseBase<String> add_submission_result(long uid,long pid,boolean isAc){//是题库的pid，比赛走add_contest_submission_accepted
@@ -146,4 +158,11 @@ public class UserService  {
         return responseBuilder.success();
     }
 
+    public responseBase<User> get(Long id) {
+        User user=userRepository.findById(id).orElse(null);
+        if(user==null)
+            return responseBuilder.fail(responseCode.USER_NOT_EXIST);
+        user.setPassword(null);
+        return responseBuilder.success(user);
+    }
 }

@@ -190,7 +190,7 @@ CREATE TABLE `user` (
     last_login_time timestamp COMMENT '最后一次登录时间',
     email text COMMENT '邮箱地址(用于找回密码/登录)',
     disabled bit DEFAULT 0 NOT NULL COMMENT '封禁',
-    type text NOT NULL COMMENT '账户类型',
+    role json NOT NULL COMMENT '账户角色,["admin","user"]',
 		nickname text NOT NULL COMMENT '昵称',
 		realname text NOT NULL COMMENT '真实信息',
 		avatar mediumtext COMMENT '头像',

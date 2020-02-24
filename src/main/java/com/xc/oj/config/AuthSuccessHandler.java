@@ -30,7 +30,7 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
         Map<String,Object> claims=new HashMap<>();
         User user=(User)(authentication.getPrincipal());
         claims.put("userId",user.getId());
-        claims.put("userRole",user.getType());
+        claims.put("userRole",user.getRole());
         PrintWriter writer = httpServletResponse.getWriter();
         writer.write(JSON.toJSONString(responseBuilder.success(JWTUtil.create(claims))));
         writer.flush();
