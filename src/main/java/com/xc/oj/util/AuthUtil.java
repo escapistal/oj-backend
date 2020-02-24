@@ -8,4 +8,14 @@ public class AuthUtil {
         User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return user.getRole().contains(role.toLowerCase());
     }
+
+    public static User getUser(){
+        User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return user;
+    }
+
+    public static Long getId(){
+        User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return user.getId();
+    }
 }

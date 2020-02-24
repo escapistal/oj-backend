@@ -15,6 +15,15 @@ public class UserInfo {
     private String realname;
     private List<String> role;
 
+    public UserInfo(){
+
+    }
+
+    public UserInfo(Long id) {
+        this.id=id;
+    }
+
+
     @Id
     @Column(name = "id")
     public Long getId() {

@@ -26,7 +26,9 @@ public enum responseCode {
 
     CONTEST_PROBLEM_NOT_EXIST(50001,"赛题不存在"),
 
-    CONTEST_ANNOUNCEMENT_NOT_EXIST(60001,"比赛通知不存在")
+    CONTEST_ANNOUNCEMENT_NOT_EXIST(60001,"比赛公告不存在"),
+
+    ANNOUNCEMENT_NOT_EXIST(70001,"公告不存在")
     ;
     private int code;
     private String msg;
