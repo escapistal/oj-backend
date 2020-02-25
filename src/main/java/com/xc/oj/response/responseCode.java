@@ -23,12 +23,18 @@ public enum responseCode {
     FTP_UPLOAD_ERROR(30005,"FTP上传失败，请稍后再试，或联系管理员"),
 
     CONTEST_NOT_EXIST(40001,"比赛不存在"),
+    CONTEST_NOT_STARTED(40002,"比赛尚未开始"),
+    CONTEST_ENDED(40003,"比赛已经结束"),
 
     CONTEST_PROBLEM_NOT_EXIST(50001,"赛题不存在"),
 
     CONTEST_ANNOUNCEMENT_NOT_EXIST(60001,"比赛公告不存在"),
 
-    ANNOUNCEMENT_NOT_EXIST(70001,"公告不存在")
+    CLARIFICATION_NOT_EXIST(70001,"提问不存在"),
+
+    ANNOUNCEMENT_NOT_EXIST(80001,"公告不存在"),
+
+    SUBMISSION_NOT_EXIST(90001,"提交不存在")
     ;
     private int code;
     private String msg;

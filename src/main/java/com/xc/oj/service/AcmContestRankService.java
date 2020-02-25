@@ -4,6 +4,8 @@ import com.xc.oj.entity.AcmContestRank;
 import com.xc.oj.repository.AcmContestRankRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
+import com.xc.oj.response.responseCode;
+import com.xc.oj.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -32,6 +34,8 @@ public class AcmContestRankService {
     }
 
     public responseBase<List<AcmContestRank>> findByContestIdAndLocked(Long cid,Boolean locked){
+        if(!AuthUtil.has("admin")&&locked==false)
+            return responseBuilder.fail(responseCode.FORBIDDEN);
         List<AcmContestRank> list=acmContestRankRepository.findByContestIdAndLocked(cid,locked);
         Collections.sort(list);
         return responseBuilder.success(list);

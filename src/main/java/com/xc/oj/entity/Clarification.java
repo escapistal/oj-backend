@@ -2,16 +2,18 @@ package com.xc.oj.entity;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-public class Clarification {
+public class Clarification implements Comparable<Clarification>{
     private Long id;
     private Long contestId;
     private Long problemId;
     private String content;
     private UserInfo createUser;
     private Timestamp createTime;
+    private List<ClarificationReply> reply;
 
     @Id
     @Column(name = "id")
@@ -73,6 +75,15 @@ public class Clarification {
         this.createTime = createTime;
     }
 
+    @OneToMany(targetEntity = ClarificationReply.class)
+    @JoinColumn(name="clar_id")
+    public List<ClarificationReply> getReply() {
+        return reply;
+    }
+
+    public void setReply(List<ClarificationReply> reply) {
+        this.reply = reply;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -90,5 +101,14 @@ public class Clarification {
     @Override
     public int hashCode() {
         return Objects.hash(id, contestId, problemId, content, createUser, createTime);
+    }
+
+    @Override
+    public int compareTo(Clarification o) {
+        if(createTime.before(o.getCreateTime()))
+            return -1;
+        if(createTime.after(o.getCreateTime()))
+            return 1;
+        return 0;
     }
 }

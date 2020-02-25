@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -21,8 +22,8 @@ public class UserController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public responseBase<List<User>> listAll() {
-        return userService.listAll();
+    public responseBase<List<User>> list() {
+        return userService.list();
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
@@ -36,13 +37,24 @@ public class UserController {
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public responseBase<String> register(@RequestParam String username,@RequestParam String password,@RequestParam String email) {
-        return userService.register(username,password,email);
+        return userService.register(username,password,email, Collections.singletonList("user"));
     }
 
-    @PreAuthorize("#id==principal.id")  //常规user只支持修改自己的信息
+    @PreAuthorize("hasAuthority('admin')")
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    public responseBase<String> register(@RequestBody User user) {
+        return userService.register(user);
+    }
+
+    @PreAuthorize("#id==principal.id or hasAuthority('admin')")  //常规user只支持修改自己的信息
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     public responseBase<User> update(@PathVariable long id, @RequestBody User user) {
         return userService.update(id,user);
     }
 
+    @PreAuthorize("hasAuthority('admin')")
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
+    public responseBase<String> delete(@PathVariable long id) {
+        return userService.delete(id);
+    }
 }

@@ -1,10 +1,13 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.ContestAnnouncement;
+import com.xc.oj.entity.UserInfo;
 import com.xc.oj.repository.ContestAnnouncementRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.AuthUtil;
+import org.omg.CORBA.DATA_CONVERSION;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -14,9 +17,11 @@ import java.util.Optional;
 
 @Service
 public class ContestAnnouncementService {
+    private final ContestService contestService;
     private final ContestAnnouncementRepository contestAnnouncementRepository;
 
-    public ContestAnnouncementService(ContestAnnouncementRepository contestAnnouncementRepository) {
+    public ContestAnnouncementService(ContestService contestService, ContestAnnouncementRepository contestAnnouncementRepository) {
+        this.contestService = contestService;
         this.contestAnnouncementRepository = contestAnnouncementRepository;
     }
 
@@ -29,7 +34,12 @@ public class ContestAnnouncementService {
     }
 
     public responseBase<List<ContestAnnouncement>> findByContestId(Long cid){
-        return responseBuilder.success(contestAnnouncementRepository.findByContestId(cid));
+        List<ContestAnnouncement> contestAnnouncements;
+        if(AuthUtil.has("admin"))
+            contestAnnouncements=contestAnnouncementRepository.findByContestId(cid);
+        else
+            contestAnnouncements=contestAnnouncementRepository.findByContestIdAndVisible(cid,true);
+        return responseBuilder.success(contestAnnouncements);
     }
 
     public responseBase<ContestAnnouncement> get(Long id) {
@@ -39,9 +49,17 @@ public class ContestAnnouncementService {
         return responseBuilder.success(contestAnnouncement);
     }
 
-    public responseBase<String> add(Long cid,ContestAnnouncement contestAnnouncement){
+    public responseBase<String> add(ContestAnnouncement contestAnnouncement){
+        if(contestAnnouncement.getContestId()==null||!contestService.existsById(contestAnnouncement.getContestId()))
+            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
         if(contestAnnouncement.getVisible()==null)
             contestAnnouncement.setVisible(true);
+        if(contestAnnouncement.getSortId()==null)
+            contestAnnouncement.setSortId(0);
+        contestAnnouncement.setCreateUser(new UserInfo(AuthUtil.getId()));
+        contestAnnouncement.setCreateTime(new Timestamp(new Date().getTime()));
+        contestAnnouncement.setUpdateUser(contestAnnouncement.getCreateUser());
+        contestAnnouncement.setUpdateTime(contestAnnouncement.getCreateTime());
         contestAnnouncementRepository.save(contestAnnouncement);
         return responseBuilder.success();
     }
@@ -58,6 +76,7 @@ public class ContestAnnouncementService {
             data.setContent(contestAnnouncement.getContent());
         if(contestAnnouncement.getVisible()!=null)
             data.setVisible(contestAnnouncement.getVisible());
+        data.setUpdateUser(new UserInfo(AuthUtil.getId()));
         data.setUpdateTime(new Timestamp(new Date().getTime()));
         contestAnnouncementRepository.save(data);
         return responseBuilder.success();

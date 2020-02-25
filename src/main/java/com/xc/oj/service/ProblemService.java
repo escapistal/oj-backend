@@ -1,10 +1,12 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.Problem;
+import com.xc.oj.entity.UserInfo;
 import com.xc.oj.repository.ProblemRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.FTPUtil;
 import com.xc.oj.util.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +39,13 @@ public class ProblemService {
         problemRepository.save(problem);
     }
 
-    public responseBase<List<Problem>> listAll() {
-        return responseBuilder.success(problemRepository.findAll());
-    }
-
     public responseBase<List<Problem>> list() {
-        return responseBuilder.success(problemRepository.findByVisibleTrue());
+        List<Problem> problems;
+        if(AuthUtil.has("admin"))
+            problems=problemRepository.findAll();
+        else
+            problems=problemRepository.findByVisible(true);
+        return responseBuilder.success(problems);
     }
 
     public responseBase<Problem> get(long id){
@@ -62,13 +65,16 @@ public class ProblemService {
     }
 
     public responseBase<String> add(Problem problem) {
-        problem.setCreateTime(new Timestamp(new Date().getTime()));
         problem.setAcceptedNumber(0);
         problem.setSubmissionNumber(0);
         if(problem.getSpj()==null)
             problem.setSpj(false);
         if(problem.getVisible()==null)
             problem.setVisible(false);
+        problem.setCreateUser(new UserInfo(AuthUtil.getId()));
+        problem.setCreateTime(new Timestamp(new Date().getTime()));
+        problem.setUpdateUser(problem.getCreateUser());
+        problem.setUpdateTime(problem.getCreateTime());
         problemRepository.save(problem);
         return responseBuilder.success();
     }
@@ -102,7 +108,7 @@ public class ProblemService {
             data.setTimeLimit(prob.getTimeLimit());
         if (prob.getMemoryLimit()!=null && prob.getMemoryLimit() > 0)
             data.setMemoryLimit(prob.getMemoryLimit());
-        if(prob.getSpj()) {
+        if (prob.getSpj()) {
             data.setSpj(prob.getSpj());
             if (prob.getSpjCode() != null)
                 data.setSpjCode(prob.getSpjCode());
@@ -111,16 +117,16 @@ public class ProblemService {
             if (prob.getSpjMd5() != null)
                 data.setSpjMd5(prob.getSpjMd5());
         }
-        if(prob.getVisible())
+        if(prob.getVisible()!=null)
             data.setVisible(prob.getVisible());
+        data.setUpdateUser(new UserInfo(AuthUtil.getId()));
         data.setUpdateTime(new Timestamp(new Date().getTime()));
         problemRepository.save(data);
         return responseBuilder.success();
     }
 
     public responseBase<String> delete(long id) {
-        Problem prob = problemRepository.findById(id).orElse(null);
-        if (prob == null)
+        if (!problemRepository.existsById(id))
             return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
         problemRepository.deleteById(id);
         return responseBuilder.success();
@@ -260,12 +266,13 @@ public class ProblemService {
             zos.close();
             deleteDir(targetDir);
             problem.setTestCaseMd5(testcaseMd5);
-            problemRepository.save(problem);
             if(!FTPUtil.upload(zip))
                 return responseBuilder.fail(responseCode.FTP_UPLOAD_ERROR);
+            problem.setUpdateUser(new UserInfo(AuthUtil.getId()));
+            problem.setUpdateTime(new Timestamp(new Date().getTime()));
+            problemRepository.save(problem);
             return responseBuilder.success(inName.size());
-        } catch(IOException e)
-        {
+        } catch(IOException e) {
             return responseBuilder.fail(responseCode.READ_FILE_ERROR);
         }finally {
 

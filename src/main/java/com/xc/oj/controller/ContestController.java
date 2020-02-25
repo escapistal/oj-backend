@@ -5,6 +5,8 @@ import com.xc.oj.entity.ContestAnnouncement;
 import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ContestService;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,28 +25,27 @@ public class ContestController {
         return contestService.listAll();
     }
 
+    @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")
+    @RequestMapping(value = "/{id}",method = RequestMethod.GET)
+    public responseBase<Contest> get(@PathVariable Long id){
+        return contestService.get(id);
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
     @RequestMapping(value="/add", method = RequestMethod.POST)
     public responseBase<String> add(@RequestBody Contest contest){
         return contestService.add(contest);
     }
 
-    @RequestMapping(value="/{id}/addProblem",method = RequestMethod.POST)
-    public responseBase<String> addProblem(@PathVariable Long id, @RequestBody ContestProblem contestProblem){
-        return contestService.addProblem(id,contestProblem);
-    }
-
-    @RequestMapping(value="/{id}/addAnnouncement",method = RequestMethod.POST)
-    public responseBase<String> addProblem(@PathVariable Long id, @RequestBody ContestAnnouncement contestAnnouncement){
-        return contestService.addAnnouncement(id,contestAnnouncement);
-    }
-
+    @PreAuthorize("hasAuthority('admin')")
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     public responseBase<String> update(@PathVariable Long id, @RequestBody Contest contest){
         return contestService.update(id,contest);
     }
 
+    @PreAuthorize("hasAuthority('admin')")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
     public responseBase<String> delete(@PathVariable Long id) {
-        return contestService.deleteById(id);
+        return contestService.delete(id);
     }
 }

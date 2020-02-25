@@ -21,12 +21,13 @@ public class AnnouncementService {
         this.announcementRepository = announcementRepository;
     }
 
-    public responseBase<List<Announcement>> listAll(boolean checkVisible) {
+    public responseBase<List<Announcement>> list() {
         List<Announcement> announcements;
-        if(checkVisible)
-            announcements=announcementRepository.findByVisible(true);
-        else
+        if(AuthUtil.has("admin"))
             announcements=announcementRepository.findAll();
+        else
+            announcements=announcementRepository.findByVisible(true);
+        //TODO 懒加载
         announcements.forEach(a->a.setContent(null));
         return responseBuilder.success(announcements);
     }

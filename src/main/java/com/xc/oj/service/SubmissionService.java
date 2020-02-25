@@ -5,10 +5,12 @@ import com.xc.oj.repository.*;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
+import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.OJPropertiesUtil;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -39,6 +41,40 @@ public class SubmissionService {
 
     public void save(Submission submission){
         submissionRepository.save(submission);
+    }
+
+    public responseBase<List<Submission>> list(Long cid) {
+        List<Submission> submissions;
+        if(cid==null||cid==0) {//普通status
+            submissions = submissionRepository.findByContestId(0L);
+            //TODO 懒加载
+            submissions.forEach(submission -> {
+                submission.setDetail(null);
+                submission.setCode(null);
+            });
+        }
+        else{//比赛status，只有admin或者赛后才允许查看
+            Contest contest=contestService.findById(cid).orElse(null);
+            if(contest==null)
+                return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+            Timestamp now=new Timestamp(new Date().getTime());
+            if(!AuthUtil.has("admin")&&!now.after(contest.getEndTime()))
+                return responseBuilder.fail(responseCode.FORBIDDEN);
+            submissions = submissionRepository.findByContestId(cid);
+            //TODO 懒加载
+            submissions.forEach(submission -> {
+                submission.setDetail(null);
+                submission.setCode(null);
+            });
+        }
+        return responseBuilder.success(submissions);
+    }
+
+    public responseBase<Submission> get(Long id) {
+        Submission submission=submissionRepository.findById(id).orElse(null);
+        if(submission==null)
+            return responseBuilder.fail(responseCode.SUBMISSION_NOT_EXIST);
+        return responseBuilder.success(submission);
     }
 
     public responseBase<String> submit(Submission submission){
@@ -101,10 +137,6 @@ public class SubmissionService {
         return responseBuilder.success();
     }
 
-    public responseBase<List<Submission>> listAll() {
-        return responseBuilder.success(submissionRepository.findAll());
-    }
-
     public void updateResult(JudgeResult judgeResult) {
         Long sid=judgeResult.getSubmissionId();
         Submission submission=submissionRepository.findById(sid).orElse(null);
@@ -145,69 +177,72 @@ public class SubmissionService {
         SingleSubmissionInfo info;
         if(cid!=0) {//赛题
             contest = contestService.findById(cid).orElse(null);
-            contestProblem = contestProblemService.findById(pid).orElse(null);
-            acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), false).orElse(null);
-            acmContestRankLocked = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), true).orElse(null);
-            if(acmContestRank==null) {
-                acmContestRank = new AcmContestRank();
-                acmContestRank.setLocked(false);
-                acmContestRank.setContestId(cid);
-                acmContestRank.setUser(submission.getUser());
-            }
-            if(acmContestRankLocked==null) {
-                acmContestRankLocked = new AcmContestRank();
-                acmContestRankLocked.setLocked(true);
-                acmContestRankLocked.setContestId(cid);
-                acmContestRankLocked.setUser(submission.getUser());
-            }
-            if (acmContestRank.getSubmissionInfo().get(pid) == null || !acmContestRank.getSubmissionInfo().get(pid).getAc()) {//此前未ac过
-                if (submission.getStatus() == JudgeResultEnum.AC) {//AC结果
-                    contestProblem.setSubmissionNumber(contestProblem.getSubmissionNumber() + 1);
-                    contestProblem.setAcceptedNumber(contestProblem.getAcceptedNumber() + 1);
-                    acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber()+1);
-                    acmContestRank.setAcceptedNumber(acmContestRank.getAcceptedNumber() + 1);
-                    info=acmContestRank.getSubmissionInfo().get(pid);
-                    if(info==null)
-                        info=new SingleSubmissionInfo();
-                    info.setAc(true);
-                    info.setAcTime((int)((submission.getCreateTime().getTime()-contest.getStartTime().getTime())/1000));
-                    acmContestRank.setTotalTime(acmContestRank.getTotalTime()+info.getError()* Integer.parseInt(OJPropertiesUtil.get("penalty_time")) +info.getAcTime());//TODO 全局配置罚时时间
-                    acmContestRank.getSubmissionInfo().put(pid,info);
-                    if (!contest.getWillLock() || submission.getCreateTime().before(contest.getLockTime())) {//不封榜或未到封榜时间
-                        contestProblem.setSubmissionNumberLocked(contestProblem.getSubmissionNumberLocked() + 1);
-                        contestProblem.setAcceptedNumberLocked(contestProblem.getAcceptedNumberLocked() + 1);
-                        acmContestRankLocked.setSubmissionNumber(acmContestRankLocked.getSubmissionNumber()+1);
-                        acmContestRankLocked.setAcceptedNumber(acmContestRankLocked.getAcceptedNumber() + 1);
-                        info=acmContestRankLocked.getSubmissionInfo().get(pid);
-                        if(info==null)
-                            info=new SingleSubmissionInfo();
+            //赛中
+            if(!submission.getCreateTime().before(contest.getStartTime())&&submission.getCreateTime().after(contest.getEndTime())) {
+                contestProblem = contestProblemService.findById(pid).orElse(null);
+                acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), false).orElse(null);
+                acmContestRankLocked = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), true).orElse(null);
+                if (acmContestRank == null) {
+                    acmContestRank = new AcmContestRank();
+                    acmContestRank.setLocked(false);
+                    acmContestRank.setContestId(cid);
+                    acmContestRank.setUser(submission.getUser());
+                }
+                if (acmContestRankLocked == null) {
+                    acmContestRankLocked = new AcmContestRank();
+                    acmContestRankLocked.setLocked(true);
+                    acmContestRankLocked.setContestId(cid);
+                    acmContestRankLocked.setUser(submission.getUser());
+                }
+                if (acmContestRank.getSubmissionInfo().get(pid) == null || !acmContestRank.getSubmissionInfo().get(pid).getAc()) {//此前未ac过
+                    if (submission.getStatus() == JudgeResultEnum.AC) {//AC结果
+                        contestProblem.setSubmissionNumber(contestProblem.getSubmissionNumber() + 1);
+                        contestProblem.setAcceptedNumber(contestProblem.getAcceptedNumber() + 1);
+                        acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber() + 1);
+                        acmContestRank.setAcceptedNumber(acmContestRank.getAcceptedNumber() + 1);
+                        info = acmContestRank.getSubmissionInfo().get(pid);
+                        if (info == null)
+                            info = new SingleSubmissionInfo();
                         info.setAc(true);
-                        info.setAcTime((int)((submission.getCreateTime().getTime()-contest.getStartTime().getTime())/1000));
-                        acmContestRankLocked.setTotalTime(acmContestRankLocked.getTotalTime()+info.getError()*20*60+info.getAcTime());//TODO 全局配置罚时时间
-                        acmContestRankLocked.getSubmissionInfo().put(pid,info);
-                    }
-                } else {//非AC结果
-                    contestProblem.setSubmissionNumber(contestProblem.getSubmissionNumber() + 1);
-                    acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber()+1);
-                    info=acmContestRank.getSubmissionInfo().get(pid);
-                    if(info==null)
-                        info=new SingleSubmissionInfo();
-                    info.setError(info.getError()+1);
-                    acmContestRank.getSubmissionInfo().put(pid,info);
-                    if (!contest.getWillLock() || submission.getCreateTime().before(contest.getLockTime())) {//不封榜或未到封榜时间
-                        contestProblem.setSubmissionNumberLocked(contestProblem.getSubmissionNumberLocked() + 1);
-                        acmContestRankLocked.setSubmissionNumber(acmContestRankLocked.getSubmissionNumber()+1);
-                        info=acmContestRankLocked.getSubmissionInfo().get(pid);
-                        if(info==null)
-                            info=new SingleSubmissionInfo();
-                        info.setError(info.getError()+1);
-                        acmContestRankLocked.getSubmissionInfo().put(pid,info);
+                        info.setAcTime((int) ((submission.getCreateTime().getTime() - contest.getStartTime().getTime()) / 1000));
+                        acmContestRank.setTotalTime(acmContestRank.getTotalTime() + info.getError() * Integer.parseInt(OJPropertiesUtil.get("penalty_time")) + info.getAcTime());//TODO 全局配置罚时时间
+                        acmContestRank.getSubmissionInfo().put(pid, info);
+                        if (!contest.getWillLock() || submission.getCreateTime().before(contest.getLockTime())) {//不封榜或未到封榜时间
+                            contestProblem.setSubmissionNumberLocked(contestProblem.getSubmissionNumberLocked() + 1);
+                            contestProblem.setAcceptedNumberLocked(contestProblem.getAcceptedNumberLocked() + 1);
+                            acmContestRankLocked.setSubmissionNumber(acmContestRankLocked.getSubmissionNumber() + 1);
+                            acmContestRankLocked.setAcceptedNumber(acmContestRankLocked.getAcceptedNumber() + 1);
+                            info = acmContestRankLocked.getSubmissionInfo().get(pid);
+                            if (info == null)
+                                info = new SingleSubmissionInfo();
+                            info.setAc(true);
+                            info.setAcTime((int) ((submission.getCreateTime().getTime() - contest.getStartTime().getTime()) / 1000));
+                            acmContestRankLocked.setTotalTime(acmContestRankLocked.getTotalTime() + info.getError() * 20 * 60 + info.getAcTime());//TODO 全局配置罚时时间
+                            acmContestRankLocked.getSubmissionInfo().put(pid, info);
+                        }
+                    } else {//非AC结果
+                        contestProblem.setSubmissionNumber(contestProblem.getSubmissionNumber() + 1);
+                        acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber() + 1);
+                        info = acmContestRank.getSubmissionInfo().get(pid);
+                        if (info == null)
+                            info = new SingleSubmissionInfo();
+                        info.setError(info.getError() + 1);
+                        acmContestRank.getSubmissionInfo().put(pid, info);
+                        if (!contest.getWillLock() || submission.getCreateTime().before(contest.getLockTime())) {//不封榜或未到封榜时间
+                            contestProblem.setSubmissionNumberLocked(contestProblem.getSubmissionNumberLocked() + 1);
+                            acmContestRankLocked.setSubmissionNumber(acmContestRankLocked.getSubmissionNumber() + 1);
+                            info = acmContestRankLocked.getSubmissionInfo().get(pid);
+                            if (info == null)
+                                info = new SingleSubmissionInfo();
+                            info.setError(info.getError() + 1);
+                            acmContestRankLocked.getSubmissionInfo().put(pid, info);
+                        }
                     }
                 }
+                contestProblemService.save(contestProblem);
+                acmContestRankService.save(acmContestRank);
+                acmContestRankService.save(acmContestRankLocked);
             }
-            contestProblemService.save(contestProblem);
-            acmContestRankService.save(acmContestRank);
-            acmContestRankService.save(acmContestRankLocked);
         }
         else {//题库提交
             problem = problemService.findById(pid).orElse(null);
@@ -225,6 +260,7 @@ public class SubmissionService {
             problemService.save(problem);
         }
     }
+
 }
 
 

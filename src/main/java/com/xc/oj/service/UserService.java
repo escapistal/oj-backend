@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService  {
@@ -52,14 +53,30 @@ public class UserService  {
         userRepository.save(user);
     }
 
-    public responseBase<List<User>> listAll() {
+    public responseBase<List<User>> list() {
         List<User> users=userRepository.findAll();
-        users.forEach(user->user.setPassword(null));
+        users.forEach(user->{user.setPassword(null);user.setAcceptedId(null);});
+        users=users.stream().filter(user->!user.getRole().contains("admin")).collect(Collectors.toList());
+        Collections.sort(users);
         return responseBuilder.success(users);
     }
 
-    public responseBase<String> register(String username, String password, String email){
-        return register(username,password,email,Collections.singletonList("user"));
+    public responseBase<User> get(Long id) {
+        User user=userRepository.findById(id).orElse(null);
+        if(user==null)
+            return responseBuilder.fail(responseCode.USER_NOT_EXIST);
+        user.setPassword(null);
+        return responseBuilder.success(user);
+    }
+
+    public responseBase<String> register(User user){//admin专用
+        user.setPassword(encoder.encode(user.getPassword()));
+        user.setCreateTime(new Timestamp(new Date().getTime()));
+        user.setAcceptedId(new ArrayList<>());
+        user.setAcceptedNumber(0);
+        user.setSubmissionNumber(0);
+        userRepository.save(user);
+        return responseBuilder.success();
     }
 
     public responseBase<String> register(String username, String password, String email,List<String> role) {
@@ -158,11 +175,4 @@ public class UserService  {
         return responseBuilder.success();
     }
 
-    public responseBase<User> get(Long id) {
-        User user=userRepository.findById(id).orElse(null);
-        if(user==null)
-            return responseBuilder.fail(responseCode.USER_NOT_EXIST);
-        user.setPassword(null);
-        return responseBuilder.success(user);
-    }
 }

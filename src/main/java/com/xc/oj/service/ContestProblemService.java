@@ -1,11 +1,13 @@
 package com.xc.oj.service;
 
+import com.xc.oj.entity.Contest;
 import com.xc.oj.entity.ContestProblem;
+import com.xc.oj.entity.UserInfo;
 import com.xc.oj.repository.ContestProblemRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.xc.oj.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -15,9 +17,11 @@ import java.util.Optional;
 
 @Service
 public class ContestProblemService {
+    private final ContestService contestService;
     private final ContestProblemRepository contestProblemRepository;
 
-    public ContestProblemService(ContestProblemRepository contestProblemRepository) {
+    public ContestProblemService(ContestService contestService, ContestProblemRepository contestProblemRepository) {
+        this.contestService = contestService;
         this.contestProblemRepository = contestProblemRepository;
     }
 
@@ -29,29 +33,54 @@ public class ContestProblemService {
         contestProblemRepository.save(contestProblem);
     }
 
-    public responseBase<List<ContestProblem>> findByContestId(long id){
-        return responseBuilder.success(contestProblemRepository.findByContestId(id));
-    }
-
-    public responseBase<String> add(long cid,ContestProblem contestProblem){
-        contestProblem.setCreateTime(new Timestamp(new Date().getTime()));
-        contestProblem.setUpdateTime(new Timestamp(new Date().getTime()));
-        contestProblem.setContestId(cid);
-        contestProblem.setAcceptedNumber(0);
-        contestProblem.setSubmissionNumber(0);
-        contestProblem.setAcceptedNumberLocked(0);
-        contestProblem.setSubmissionNumberLocked(0);
-        if(contestProblem.getVisible()==null)
-            contestProblem.setVisible(true);
-        contestProblemRepository.save(contestProblem);
-        return responseBuilder.success();
+    public responseBase<List<ContestProblem>> findByContestId(long cid){
+        Contest contest=contestService.findById(cid).orElse(null);
+        if(contest==null)
+            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        List<ContestProblem> contestProblems;
+        if(AuthUtil.has("admin"))
+            contestProblems=contestProblemRepository.findByContestId(cid);
+        else {
+            Timestamp now=new Timestamp(new Date().getTime());
+            if(now.before(contest.getStartTime()))
+                return responseBuilder.fail(responseCode.CONTEST_NOT_STARTED);
+            contestProblems = contestProblemRepository.findByContestIdAndVisible(cid, true);
+        }
+        return responseBuilder.success(contestProblems);
     }
 
     public responseBase<ContestProblem> get(Long id) {
         ContestProblem contestProblem=contestProblemRepository.findById(id).orElse(null);
         if(contestProblem==null)
             return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
+        if(!AuthUtil.has("admin")) {
+            Contest contest=contestService.findById(contestProblem.getContestId()).orElse(null);
+            Timestamp now=new Timestamp(new Date().getTime());
+            if(now.before(contest.getStartTime()))
+                return responseBuilder.fail(responseCode.CONTEST_NOT_STARTED);
+        }
         return responseBuilder.success(contestProblem);
+    }
+
+    public responseBase<String> add(ContestProblem contestProblem){
+        if(contestProblem.getContestId()==null||!contestService.existsById(contestProblem.getContestId()))
+            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        contestProblem.setCreateUser(new UserInfo(AuthUtil.getId()));
+        contestProblem.setCreateTime(new Timestamp(new Date().getTime()));
+        contestProblem.setUpdateUser(contestProblem.getCreateUser());
+        contestProblem.setUpdateTime(contestProblem.getCreateTime());
+        contestProblem.setAcceptedNumber(0);
+        contestProblem.setSubmissionNumber(0);
+        contestProblem.setAcceptedNumberLocked(0);
+        contestProblem.setSubmissionNumberLocked(0);
+        if(contestProblem.getVisible()==null)
+            contestProblem.setVisible(true);
+        if(contestProblem.getTimeLimit()==null)
+            contestProblem.setTimeLimit(0);
+        if(contestProblem.getMemoryLimit()==null)
+            contestProblem.setMemoryLimit(0);
+        contestProblemRepository.save(contestProblem);
+        return responseBuilder.success();
     }
 
     public responseBase<String> update(long id, ContestProblem contestProblem){
@@ -84,6 +113,4 @@ public class ContestProblemService {
         contestProblemRepository.deleteById(id);
         return responseBuilder.success();
     }
-
-
 }

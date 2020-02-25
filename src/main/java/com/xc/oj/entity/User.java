@@ -16,7 +16,7 @@ import java.util.*;
 @Entity
 @TypeDef(name = "json", typeClass = JsonStringType.class)
 @Table(name = "user", schema = "onlinejudge", catalog = "")
-public class User implements Serializable, UserDetails {
+public class User implements Serializable, UserDetails, Comparable<User> {
     private Long id;
     private String username;
     private String password;
@@ -207,4 +207,10 @@ public class User implements Serializable, UserDetails {
         return list;
     }
 
+    @Override
+    public int compareTo(User o) {
+        if(!acceptedNumber.equals(o.getAcceptedNumber()))
+            return -acceptedNumber.compareTo(o.getAcceptedNumber());
+        return submissionNumber.compareTo(o.getSubmissionNumber());
+    }
 }

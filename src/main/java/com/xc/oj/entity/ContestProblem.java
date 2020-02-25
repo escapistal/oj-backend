@@ -1,5 +1,6 @@
 package com.xc.oj.entity;
 
+import com.xc.oj.response.responseBase;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -231,4 +232,6 @@ public class ContestProblem implements Serializable{
     public int hashCode() {
         return Objects.hash(id, contestId, sortId, problem, shortname, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, submissionNumberLocked, acceptedNumberLocked, createTime, updateTime, createUser, updateUser);
     }
+
+
 }

@@ -1,17 +1,14 @@
 package com.xc.oj.service;
 
-import com.xc.oj.entity.Contest;
-import com.xc.oj.entity.ContestAnnouncement;
-import com.xc.oj.entity.ContestProblem;
+import com.xc.oj.entity.*;
 import com.xc.oj.repository.ContestRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.xc.oj.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -19,13 +16,13 @@ import java.util.Optional;
 @Service
 public class ContestService {
     private final ContestRepository contestRepository;
-    private final ContestProblemService contestProblemService;
-    private final ContestAnnouncementService contestAnnouncementService;
 
-    public ContestService(ContestRepository contestRepository, ContestProblemService contestProblemService, ContestAnnouncementService contestAnnouncementService) {
+    public ContestService(ContestRepository contestRepository) {
         this.contestRepository = contestRepository;
-        this.contestProblemService = contestProblemService;
-        this.contestAnnouncementService = contestAnnouncementService;
+    }
+
+    public boolean existsById(Long id) {
+        return contestRepository.existsById(id);
     }
 
     public Optional<Contest> findById(Long id){
@@ -37,35 +34,27 @@ public class ContestService {
     }
 
     public responseBase<List<Contest>> listAll(){
-        return responseBuilder.success(contestRepository.findAll());
+        List<Contest> contests;
+        if(AuthUtil.has("admin"))
+            contests=contestRepository.findAll();
+        else
+            contests=contestRepository.findByVisible(true);
+        return responseBuilder.success(contests);
     }
 
-    public responseBase<String> add(Contest contest){
-        contest.setCreateTime(new Timestamp(new Date().getTime()));
-        contest.setUpdateTime(new Timestamp(new Date().getTime()));
-        System.out.println(contest.getLockTime());
-        contestRepository.save(contest);
-        return responseBuilder.success();
-    }
-
-    public responseBase<String> deleteById(Long id){
+    public responseBase<Contest> get(Long id) {
         Contest contest=contestRepository.findById(id).orElse(null);
         if(contest==null)
             return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-        return responseBuilder.success();
+        return responseBuilder.success(contest);
     }
 
-    public responseBase<String> addProblem(Long id, ContestProblem contestProblem) {
-        if(!contestRepository.existsById(id))
-            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-        contestProblemService.add(id,contestProblem);
-        return responseBuilder.success();
-    }
-
-    public responseBase<String> addAnnouncement(Long id, ContestAnnouncement contestAnnouncement){
-        if(!contestRepository.existsById(id))
-            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-        contestAnnouncementService.add(id,contestAnnouncement);
+    public responseBase<String> add(Contest contest){
+        contest.setCreateUser(new UserInfo(AuthUtil.getId()));
+        contest.setCreateTime(new Timestamp(new Date().getTime()));
+        contest.setUpdateUser(contest.getCreateUser());
+        contest.setUpdateTime(contest.getCreateTime());
+        contestRepository.save(contest);
         return responseBuilder.success();
     }
 
@@ -93,6 +82,17 @@ public class ContestService {
             data.setStartTime(contest.getStartTime());
         if(contest.getEndTime()!=null)
             data.setEndTime(contest.getEndTime());
+        contest.setUpdateUser(new UserInfo(AuthUtil.getId()));
+        contest.setUpdateTime(new Timestamp(new Date().getTime()));
         return responseBuilder.success();
     }
+
+    public responseBase<String> delete(Long id){
+        if(!contestRepository.existsById(id))
+            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        contestRepository.deleteById(id);
+        return responseBuilder.success();
+    }
+
+
 }

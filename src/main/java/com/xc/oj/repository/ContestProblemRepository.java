@@ -10,4 +10,5 @@ import java.util.List;
 public interface ContestProblemRepository extends JpaRepository<ContestProblem,Long> {
     List<ContestProblem> findByContestId(Long id);
 
+    List<ContestProblem> findByContestIdAndVisible(long id, boolean visible);
 }

@@ -14,7 +14,7 @@ public class AuthUtil {
         return user;
     }
 
-    public static Long getId(){
+    public static long getId(){
         User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return user.getId();
     }
