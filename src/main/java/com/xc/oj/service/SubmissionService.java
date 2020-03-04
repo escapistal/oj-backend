@@ -177,8 +177,9 @@ public class SubmissionService {
         SingleSubmissionInfo info;
         if(cid!=0) {//赛题
             contest = contestService.findById(cid).orElse(null);
-            //赛中
-            if(!submission.getCreateTime().before(contest.getStartTime())&&submission.getCreateTime().after(contest.getEndTime())) {
+            //赛中且非管理员提交
+            if(!submission.getCreateTime().before(contest.getStartTime())&&submission.getCreateTime().after(contest.getEndTime())
+                && !submission.getUser().getRole().contains("admin")) {
                 contestProblem = contestProblemService.findById(pid).orElse(null);
                 acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), false).orElse(null);
                 acmContestRankLocked = acmContestRankService.findByContestIdAndUserIdAndLocked(cid, submission.getUser().getId(), true).orElse(null);

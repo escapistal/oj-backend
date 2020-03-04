@@ -7,9 +7,14 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Pageable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -21,12 +26,15 @@ public class AnnouncementService {
         this.announcementRepository = announcementRepository;
     }
 
-    public responseBase<List<Announcement>> list() {
-        List<Announcement> announcements;
-        if(AuthUtil.has("admin"))
-            announcements=announcementRepository.findAll();
+    public responseBase<Page<Announcement>> list(boolean checkVisible,int page,int size) {
+        Page<Announcement> announcements;
+        PageRequest pageRequest=PageRequest.of(page, size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
+        if(!checkVisible&&!AuthUtil.has("admin"))
+            checkVisible=true;
+        if(!checkVisible)
+            announcements=announcementRepository.findAll(pageRequest);
         else
-            announcements=announcementRepository.findByVisible(true);
+            announcements=announcementRepository.findByVisible(true, pageRequest);
         //TODO 懒加载
         announcements.forEach(a->a.setContent(null));
         return responseBuilder.success(announcements);

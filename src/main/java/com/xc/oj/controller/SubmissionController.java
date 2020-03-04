@@ -23,7 +23,7 @@ public class SubmissionController {
         return submissionService.list(cid);
     }
 
-    @PostAuthorize("returnObject.data.id == principal.id or hasAuthority('admin')")
+    @PostAuthorize("returnObject.status !=0 or returnObject.data.user.id == principal.id or hasAuthority('admin')")
     @RequestMapping(value = "/{id}",method = RequestMethod.GET)
     public responseBase<Submission> get(@PathVariable Long id){
         return submissionService.get(id);

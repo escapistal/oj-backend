@@ -34,6 +34,7 @@ public class ContestProblemController {
     public responseBase<String> add(@RequestBody ContestProblem contestProblem){
         return contestProblemService.add(contestProblem);
     }
+
     @PreAuthorize("hasAuthority('admin')")
     @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     public responseBase<String> update(@PathVariable Long id, @RequestBody ContestProblem contestProblem){

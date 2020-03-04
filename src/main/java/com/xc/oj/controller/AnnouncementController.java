@@ -3,6 +3,7 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.Announcement;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.AnnouncementService;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,12 @@ public class AnnouncementController {
     }
 
     @RequestMapping(value = "/list",method = RequestMethod.GET)
-    public responseBase<List<Announcement>> list(){
-        return announcementService.list();
+    public responseBase<Page<Announcement>> list(
+            @RequestParam int page,
+            @RequestParam int size,
+            @RequestParam(required = false,defaultValue = "true") boolean checkVisible)
+    {
+        return announcementService.list(checkVisible,page,size);
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")

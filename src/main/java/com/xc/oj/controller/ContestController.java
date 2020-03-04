@@ -1,15 +1,12 @@
 package com.xc.oj.controller;
 
 import com.xc.oj.entity.Contest;
-import com.xc.oj.entity.ContestAnnouncement;
-import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ContestService;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/contest")
@@ -21,8 +18,11 @@ public class ContestController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public responseBase<List<Contest>> listAll() {
-        return contestService.listAll();
+    public responseBase<Page<Contest>> list(
+            @RequestParam int page,
+            @RequestParam int size,
+            @RequestParam(required = false,defaultValue = "true") boolean checkVisible) {
+        return contestService.list(checkVisible,page,size);
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")

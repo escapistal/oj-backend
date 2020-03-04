@@ -1,5 +1,7 @@
 package com.xc.oj.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -81,6 +83,7 @@ public class ContestAnnouncement {
 
     @Basic
     @Column(name = "create_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getCreateTime() {
         return createTime;
     }

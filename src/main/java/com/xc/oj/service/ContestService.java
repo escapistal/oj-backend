@@ -6,6 +6,9 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -33,12 +36,21 @@ public class ContestService {
         contestRepository.save(contest);
     }
 
-    public responseBase<List<Contest>> listAll(){
-        List<Contest> contests;
-        if(AuthUtil.has("admin"))
-            contests=contestRepository.findAll();
+    public responseBase<Page<Contest>> list(boolean checkVisible, int page, int size){
+        Page<Contest> contests;
+        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
+        if(!checkVisible&&!AuthUtil.has("admin"))
+            checkVisible=true;
+        if(!checkVisible)
+            contests=contestRepository.findAll(pageRequest);
         else
-            contests=contestRepository.findByVisible(true);
+            contests=contestRepository.findByVisible(true,pageRequest);
+        contests.forEach(c->{
+            if(c.getPassword()!=null&&!c.getPassword().isEmpty())
+                c.setPassword("set");
+            else
+                c.setPassword(null);
+        });
         return responseBuilder.success(contests);
     }
 

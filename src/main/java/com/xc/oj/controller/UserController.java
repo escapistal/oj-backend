@@ -1,6 +1,7 @@
 package com.xc.oj.controller;
 
 import com.xc.oj.entity.User;
+import com.xc.oj.entity.UserInfo;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.UserService;
 import io.swagger.annotations.Api;
@@ -31,7 +32,7 @@ public class UserController {
 
     @ApiOperation("用户登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public responseBase<String> login(@RequestParam String username,@RequestParam String password) {
+    public responseBase<UserInfo> login(@RequestParam String username, @RequestParam String password) {
         return userService.login(username,password);
     }
 
@@ -41,9 +42,9 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('admin')")
-    @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public responseBase<String> register(@RequestBody User user) {
-        return userService.register(user);
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    public responseBase<String> add(@RequestBody User user) {
+        return userService.add(user);
     }
 
     @PreAuthorize("#id==principal.id or hasAuthority('admin')")  //常规user只支持修改自己的信息

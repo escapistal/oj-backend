@@ -1,5 +1,6 @@
 package com.xc.oj.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -217,6 +218,7 @@ public class Problem implements Serializable {
 
     @Basic
     @Column(name = "create_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -227,6 +229,7 @@ public class Problem implements Serializable {
 
     @Basic
     @Column(name = "update_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getUpdateTime() {
         return updateTime;
     }

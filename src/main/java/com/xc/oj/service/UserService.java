@@ -2,6 +2,7 @@ package com.xc.oj.service;
 
 import com.xc.oj.entity.Problem;
 import com.xc.oj.entity.User;
+import com.xc.oj.entity.UserInfo;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.repository.UserRepository;
 import com.xc.oj.response.responseBuilder;
@@ -37,7 +38,7 @@ public class UserService  {
     private BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
     private Pattern passwordPattern=Pattern.compile("^[\\w~`!@#$%^&*()_+-=/?\\|<>,.;\\[\\]{}'\":]{6,16}$");
     private Pattern usernamePattern=Pattern.compile("^[\\w]{3,16}$");
-    private Pattern emailPattern=Pattern.compile("^[\\w-]+@[\\w.-]+$");
+    private Pattern emailPattern=Pattern.compile("^[\\w-_]+@[\\w.-]+$");
 
     public UserService(UserRepository userRepository, ProblemService problemService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
@@ -69,7 +70,7 @@ public class UserService  {
         return responseBuilder.success(user);
     }
 
-    public responseBase<String> register(User user){//admin专用
+    public responseBase<String> add(User user){//admin专用register
         user.setPassword(encoder.encode(user.getPassword()));
         user.setCreateTime(new Timestamp(new Date().getTime()));
         user.setAcceptedId(new ArrayList<>());
@@ -106,7 +107,8 @@ public class UserService  {
         return responseBuilder.success();
     }
 
-    public responseBase<String> login(String username, String password) {
+    public responseBase<UserInfo> login(String username, String password) {
+        System.out.println(username+" "+password);
         UsernamePasswordAuthenticationToken upToken = new UsernamePasswordAuthenticationToken(username, password);
         final Authentication authentication = authenticationManager.authenticate(upToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -118,7 +120,14 @@ public class UserService  {
         final String token = JWTUtil.create(claims);
         user.setLastLoginTime(new Timestamp(new Date().getTime()));
         userRepository.save(user);
-        return responseBuilder.success(token);
+        UserInfo userInfo=new UserInfo();
+        userInfo.setId(user.getId());
+        userInfo.setRole(user.getRole());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setNickname(user.getNickname());
+        userInfo.setRealname(user.getRealname());
+        userInfo.setToken(token);
+        return responseBuilder.success(userInfo);
     }
 
     public responseBase<User> update(long id, User user){

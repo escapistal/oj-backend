@@ -1,12 +1,10 @@
 package com.xc.oj.config;
 
 import com.alibaba.fastjson.JSON;
-import com.xc.oj.entity.User;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 

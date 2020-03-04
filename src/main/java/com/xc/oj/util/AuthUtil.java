@@ -5,7 +5,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public class AuthUtil {
     public static boolean has(String role){
-        User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user;
+        try{
+            user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        }catch(Exception e){
+            return false;
+        }
         return user.getRole().contains(role.toLowerCase());
     }
 
@@ -15,7 +20,12 @@ public class AuthUtil {
     }
 
     public static long getId(){
-        User user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user;
+        try{
+            user= (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        }catch(Exception e){
+            return -1;
+        }
         return user.getId();
     }
 }

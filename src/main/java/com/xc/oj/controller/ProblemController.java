@@ -3,6 +3,7 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.Problem;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ProblemService;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,11 @@ public class ProblemController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public responseBase<List<Problem>> list() {
-        return problemService.list();
+    public responseBase<Page<Problem>> list(
+            @RequestParam int page,
+            @RequestParam int size,
+            @RequestParam(required = false,defaultValue = "true") boolean checkVisible) {
+        return problemService.list(checkVisible,page,size);
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")

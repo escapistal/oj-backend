@@ -1,5 +1,6 @@
 package com.xc.oj.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -88,6 +89,7 @@ public class Submission implements Serializable{
 
     @Basic
     @Column(name = "create_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -149,6 +151,7 @@ public class Submission implements Serializable{
 
     @Basic
     @Column(name = "judge_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getJudgeTime() {
         return judgeTime;
     }

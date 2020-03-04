@@ -10,6 +10,9 @@ import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.FTPUtil;
 import com.xc.oj.util.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,12 +42,15 @@ public class ProblemService {
         problemRepository.save(problem);
     }
 
-    public responseBase<List<Problem>> list() {
-        List<Problem> problems;
-        if(AuthUtil.has("admin"))
-            problems=problemRepository.findAll();
+    public responseBase<Page<Problem>> list(boolean checkVisible, int page, int size) {
+        Page<Problem> problems;
+        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
+        if(!checkVisible&&!AuthUtil.has("admin"))
+            checkVisible=true;
+        if(!checkVisible)
+            problems=problemRepository.findAll(pageRequest);
         else
-            problems=problemRepository.findByVisible(true);
+            problems=problemRepository.findByVisible(true,pageRequest);
         return responseBuilder.success(problems);
     }
 

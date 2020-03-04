@@ -27,6 +27,7 @@ public class AcmContestRank implements Comparable<AcmContestRank>{
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }

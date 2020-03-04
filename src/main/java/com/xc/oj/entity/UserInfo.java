@@ -14,6 +14,8 @@ public class UserInfo {
     private String nickname;
     private String realname;
     private List<String> role;
+    @Transient
+    private String token;
 
     public UserInfo(){
 
@@ -75,6 +77,13 @@ public class UserInfo {
         this.role = role;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     @Override
     public boolean equals(Object o) {

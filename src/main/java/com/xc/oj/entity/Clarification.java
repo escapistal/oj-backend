@@ -1,5 +1,7 @@
 package com.xc.oj.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
@@ -17,6 +19,7 @@ public class Clarification implements Comparable<Clarification>{
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long getId() {
         return id;
     }
@@ -67,6 +70,7 @@ public class Clarification implements Comparable<Clarification>{
 
     @Basic
     @Column(name = "create_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getCreateTime() {
         return createTime;
     }

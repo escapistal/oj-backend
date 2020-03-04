@@ -1,5 +1,6 @@
 package com.xc.oj.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.vladmihalcea.hibernate.type.json.JsonStringType;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Type;
@@ -65,6 +66,7 @@ public class User implements Serializable, UserDetails, Comparable<User> {
 
     @Basic
     @Column(name = "create_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -75,6 +77,7 @@ public class User implements Serializable, UserDetails, Comparable<User> {
 
     @Basic
     @Column(name = "last_login_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public Timestamp getLastLoginTime() {
         return lastLoginTime;
     }
