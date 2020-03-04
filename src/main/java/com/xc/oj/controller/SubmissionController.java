@@ -3,6 +3,7 @@ package com.xc.oj.controller;
 import com.xc.oj.entity.Submission;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.SubmissionService;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,16 @@ public class SubmissionController {
         this.submissionService = submissionService;
     }
 
-    @RequestMapping(value = {"/list","list/{cid}"}, method = RequestMethod.GET)
-    public responseBase<List<Submission>> list(@PathVariable(required = false) Long cid){
-        return submissionService.list(cid);
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    public responseBase<Page<Submission>> list(
+            @RequestParam(required = false) Long cid,
+            @RequestParam(required = false) Long pid,
+            @RequestParam(required = false) Long uid,
+            @RequestParam(required = false) String uname,
+            @RequestParam int page,
+            @RequestParam int size
+            ){
+        return submissionService.list(cid,pid,uid,uname,page,size);
     }
 
     @PostAuthorize("returnObject.status !=0 or returnObject.data.user.id == principal.id or hasAuthority('admin')")

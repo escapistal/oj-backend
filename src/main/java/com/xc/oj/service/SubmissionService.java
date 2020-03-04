@@ -7,6 +7,7 @@ import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.OJPropertiesUtil;
+import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,30 +44,39 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
-    public responseBase<List<Submission>> list(Long cid) {
-        List<Submission> submissions;
-        if(cid==null||cid==0) {//普通status
-            submissions = submissionRepository.findByContestId(0L);
-            //TODO 懒加载
-            submissions.forEach(submission -> {
-                submission.setDetail(null);
-                submission.setCode(null);
-            });
-        }
-        else{//比赛status，只有admin或者赛后才允许查看
+    public responseBase<Page<Submission>> list(Long cid, Long pid, Long uid, String uname,int page,int size) {
+        Page<Submission> submissions;
+        if(cid!=null&&cid>0) {//TODO 比赛status，cid筛选预计废弃，涉及contest的逻辑另外做，不支持筛选
             Contest contest=contestService.findById(cid).orElse(null);
             if(contest==null)
                 return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
             Timestamp now=new Timestamp(new Date().getTime());
             if(!AuthUtil.has("admin")&&!now.after(contest.getEndTime()))
                 return responseBuilder.fail(responseCode.FORBIDDEN);
-            submissions = submissionRepository.findByContestId(cid);
-            //TODO 懒加载
-            submissions.forEach(submission -> {
-                submission.setDetail(null);
-                submission.setCode(null);
-            });
         }
+        Submission submission=new Submission();
+        if(cid!=null)//预计废弃，同上
+            submission.setContestId(cid);
+        if(pid!=null)
+            submission.setProblemId(pid);
+        if(uid!=null)//uid优先
+            submission.setUser(new UserInfo(uid));
+        else if(uname!=null&&!"".equals(uname.trim())) {
+            UserInfo userInfo=new UserInfo();
+            userInfo.setNickname(uname);
+            submission.setUser(userInfo);
+        }
+        ExampleMatcher exampleMatcher=ExampleMatcher.matching()
+                .withMatcher("user.nickname" ,ExampleMatcher.GenericPropertyMatchers.contains());
+        Example<Submission> submissionExample = Example.of(submission ,exampleMatcher);
+        PageRequest pageRequest=PageRequest.of(page,size,Sort.by(Sort.Order.asc("createTime")));
+        submissions = submissionRepository.findAll(submissionExample,pageRequest);
+        //TODO 懒加载
+        submissions.forEach(s -> {
+            s.setDetail(null);
+            s.setCode(null);
+        });
+
         return responseBuilder.success(submissions);
     }
 
