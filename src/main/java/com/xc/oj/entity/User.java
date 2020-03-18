@@ -66,7 +66,7 @@ public class User implements Serializable, UserDetails, Comparable<User> {
 
     @Basic
     @Column(name = "create_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -77,7 +77,7 @@ public class User implements Serializable, UserDetails, Comparable<User> {
 
     @Basic
     @Column(name = "last_login_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getLastLoginTime() {
         return lastLoginTime;
     }

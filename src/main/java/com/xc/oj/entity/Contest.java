@@ -115,7 +115,7 @@ public class Contest implements Serializable {
 
     @Basic
     @Column(name = "start_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getStartTime() {
         return startTime;
     }
@@ -126,7 +126,7 @@ public class Contest implements Serializable {
 
     @Basic
     @Column(name = "end_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getEndTime() {
         return endTime;
     }
@@ -147,7 +147,7 @@ public class Contest implements Serializable {
 
     @Basic
     @Column(name = "lock_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getLockTime() {
         return lockTime;
     }
@@ -158,7 +158,7 @@ public class Contest implements Serializable {
 
     @Basic
     @Column(name = "unlock_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getUnlockTime() {
         return unlockTime;
     }

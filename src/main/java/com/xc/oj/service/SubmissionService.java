@@ -69,7 +69,7 @@ public class SubmissionService {
         ExampleMatcher exampleMatcher=ExampleMatcher.matching()
                 .withMatcher("user.nickname" ,ExampleMatcher.GenericPropertyMatchers.contains());
         Example<Submission> submissionExample = Example.of(submission ,exampleMatcher);
-        PageRequest pageRequest=PageRequest.of(page,size,Sort.by(Sort.Order.asc("createTime")));
+        PageRequest pageRequest=PageRequest.of(page,size,Sort.by(Sort.Order.desc("createTime")));
         submissions = submissionRepository.findAll(submissionExample,pageRequest);
         //TODO 懒加载
         submissions.forEach(s -> {

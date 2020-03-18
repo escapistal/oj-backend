@@ -71,7 +71,7 @@ public class Announcement {
 
     @Basic
     @Column(name = "create_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getCreateTime() {
         return createTime;
     }
@@ -82,7 +82,7 @@ public class Announcement {
 
     @Basic
     @Column(name = "update_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getUpdateTime() {
         return updateTime;
     }

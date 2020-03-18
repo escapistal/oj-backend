@@ -36,16 +36,30 @@ public class ContestService {
         contestRepository.save(contest);
     }
 
-    public responseBase<Page<Contest>> list(boolean checkVisible, int page, int size){
-        Page<Contest> contests;
-        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
+    public responseBase<Page<Contest>> list(boolean checkVisible,String state, int page, int size){
+        Page<Contest> contests = null;
+        PageRequest pageRequest=null;
         if(!checkVisible&&!AuthUtil.has("admin"))
             checkVisible=true;
-        if(!checkVisible)
-            contests=contestRepository.findAll(pageRequest);
-        else
-            contests=contestRepository.findByVisible(true,pageRequest);
+        if("complete".equals(state)) {
+            pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("startTime")));
+            if (!checkVisible)
+                contests = contestRepository.findAll(pageRequest);
+            else
+                contests = contestRepository.findByVisible(true, pageRequest);
+        }
+        else if("current".equals(state)){
+            pageRequest=PageRequest.of(0,50, Sort.by(Sort.Order.asc("startTime")));
+            System.out.println(new Timestamp(new Date().getTime()));
+            contests=contestRepository.findByEndTimeAfterAndVisible(new Timestamp(new Date().getTime()),true,pageRequest);
+        }
+        else if("ended".equals(state)){
+            pageRequest=PageRequest.of(0,50, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("startTime")));
+            contests=contestRepository.findByEndTimeBeforeAndVisible(new Timestamp(new Date().getTime()),true,pageRequest);
+        }
         contests.forEach(c->{
+            System.out.println(c.getEndTime());
+            System.out.println(c.getEndTime().before(new Timestamp(new Date().getTime())));
             if(c.getPassword()!=null&&!c.getPassword().isEmpty())
                 c.setPassword("set");
             else

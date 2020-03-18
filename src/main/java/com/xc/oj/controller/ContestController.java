@@ -19,10 +19,11 @@ public class ContestController {
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<Page<Contest>> list(
-            @RequestParam int page,
-            @RequestParam int size,
+            @RequestParam(required = false,defaultValue = "0") int page,
+            @RequestParam(required = false,defaultValue = "10") int size,
+            @RequestParam(required = false,defaultValue = "complete") String state,
             @RequestParam(required = false,defaultValue = "true") boolean checkVisible) {
-        return contestService.list(checkVisible,page,size);
+        return contestService.list(checkVisible,state,page,size);
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")
