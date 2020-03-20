@@ -23,7 +23,7 @@ public class ContestProblemController {
         return contestProblemService.findByContestId(cid);
     }
 
-    @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")
+    @PostAuthorize("returnObject.status !=0 or returnObject.data.visible == true or hasAuthority('admin')")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public responseBase<ContestProblem> get(@PathVariable Long id){
         return contestProblemService.get(id);

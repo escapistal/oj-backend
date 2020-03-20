@@ -11,5 +11,5 @@ import java.util.List;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
-    List<Submission> findByContestId(Long cid);
+//    List<Submission> findByContestId(Long cid);
 }

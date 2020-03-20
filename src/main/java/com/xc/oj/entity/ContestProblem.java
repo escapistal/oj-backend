@@ -1,46 +1,24 @@
 package com.xc.oj.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.xc.oj.response.responseBase;
-import org.hibernate.annotations.Type;
-
 import javax.persistence.*;
-import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "contest_problem", schema = "onlinejudge", catalog = "")
-public class ContestProblem implements Serializable{
-    private Long id;
+@DiscriminatorValue("1")
+//@Table(name = "contest_problem", schema = "onlinejudge", catalog = "")
+public class ContestProblem extends Problem{
     private Long contestId;
-    private Integer sortId;
     private Problem problem;
-    private String shortname;
-    private List<HashMap<String,String>> allowLanguage;
-    private Integer timeLimit;
-    private Integer memoryLimit;
-    private Boolean visible;
-    private Integer submissionNumber;
-    private Integer acceptedNumber;
     private Integer submissionNumberLocked;
     private Integer acceptedNumberLocked;
-    private Timestamp createTime;
-    private Timestamp updateTime;
-    private UserInfo createUser;
-    private UserInfo updateUser;
 
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long getId() {
-        return id;
+    public ContestProblem() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public ContestProblem(Long pid) {
+        this.problem=new Problem(pid);
     }
 
     @Basic
@@ -51,16 +29,6 @@ public class ContestProblem implements Serializable{
 
     public void setContestId(Long contestId) {
         this.contestId = contestId;
-    }
-
-    @Basic
-    @Column(name = "sort_id")
-    public Integer getSortId() {
-        return sortId;
-    }
-
-    public void setSortId(Integer sortId) {
-        this.sortId = sortId;
     }
 
     @ManyToOne
@@ -74,78 +42,6 @@ public class ContestProblem implements Serializable{
     }
 
     @Basic
-    @Column(name = "shortname")
-    public String getShortname() {
-        return shortname;
-    }
-
-    public void setShortname(String shortname) {
-        this.shortname = shortname;
-    }
-
-    @Basic
-    @Type(type = "json" )
-    @Column(name = "allow_language",columnDefinition = "json")
-    public List<HashMap<String,String>> getAllowLanguage() {
-        return allowLanguage;
-    }
-
-    public void setAllowLanguage(List<HashMap<String,String>> allowLanguage) {
-        this.allowLanguage = allowLanguage;
-    }
-
-
-    @Basic
-    @Column(name = "time_limit")
-    public Integer getTimeLimit() {
-        return timeLimit;
-    }
-
-    public void setTimeLimit(Integer timeLimit) {
-        this.timeLimit = timeLimit;
-    }
-
-    @Basic
-    @Column(name = "memory_limit")
-    public Integer getMemoryLimit() {
-        return memoryLimit;
-    }
-
-    public void setMemoryLimit(Integer memoryLimit) {
-        this.memoryLimit = memoryLimit;
-    }
-
-    @Basic
-    @Column(name = "visible")
-    public Boolean getVisible() {
-        return visible;
-    }
-
-    public void setVisible(Boolean visible) {
-        this.visible = visible;
-    }
-
-    @Basic
-    @Column(name = "submission_number")
-    public Integer getSubmissionNumber() {
-        return submissionNumber;
-    }
-
-    public void setSubmissionNumber(Integer submissionNumber) {
-        this.submissionNumber = submissionNumber;
-    }
-
-    @Basic
-    @Column(name = "accepted_number")
-    public Integer getAcceptedNumber() {
-        return acceptedNumber;
-    }
-
-    public void setAcceptedNumber(Integer acceptedNumber) {
-        this.acceptedNumber = acceptedNumber;
-    }
-
-    @Basic
     @Column(name = "submission_number_locked")
     public Integer getSubmissionNumberLocked() {
         return submissionNumberLocked;
@@ -154,6 +50,7 @@ public class ContestProblem implements Serializable{
     public void setSubmissionNumberLocked(Integer submissionNumberLocked) {
         this.submissionNumberLocked = submissionNumberLocked;
     }
+
 
     @Basic
     @Column(name = "accepted_number_locked")
@@ -165,76 +62,68 @@ public class ContestProblem implements Serializable{
         this.acceptedNumberLocked = acceptedNumberLocked;
     }
 
-    @Basic
-    @Column(name = "create_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    public Timestamp getCreateTime() {
-        return createTime;
+    @Transient
+    public Integer getRealTimeLimit(){
+        Integer timeLimit=getTimeLimit();
+        if(timeLimit==null||timeLimit==0)
+            timeLimit=problem.getTimeLimit();
+        return timeLimit;
     }
 
-    public void setCreateTime(Timestamp createTime) {
-        this.createTime = createTime;
+    @Transient
+    public Integer getRealMemoryLimit(){
+        Integer memoryLimit=getMemoryLimit();
+        if(memoryLimit==null||memoryLimit==0)
+            memoryLimit=problem.getMemoryLimit();
+        return memoryLimit;
+    }
+    @Transient
+    public Integer getRealTimeLimit(String lang){
+        Integer timeLimit=getRealTimeLimit();
+        for(HashMap<String,String> mp:getRealAllowLanguage()){
+            if(mp.get("language").equals(lang)) {
+                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("time_factor")));
+                break;
+            }
+        }
+        return timeLimit;
     }
 
-    @Basic
-    @Column(name = "update_time")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    public Timestamp getUpdateTime() {
-        return updateTime;
+    @Transient
+    public Integer getRealMemoryLimit(String lang){
+        Integer memoryLimit=getRealMemoryLimit();
+        for(HashMap<String,String> mp:getRealAllowLanguage()){
+            if(mp.get("language").equals(lang)) {
+                memoryLimit = (int)Math.round(memoryLimit*Double.parseDouble(mp.get("memory_factor")));
+                break;
+            }
+        }
+        return memoryLimit;
     }
 
-    public void setUpdateTime(Timestamp updateTime) {
-        this.updateTime = updateTime;
+    @Transient
+    public List<HashMap<String,String>> getRealAllowLanguage(){
+        List<HashMap<String,String>> allowLanguage=getAllowLanguage();
+        if(allowLanguage==null||allowLanguage.isEmpty())
+            allowLanguage=problem.getAllowLanguage();
+        return allowLanguage;
     }
 
-    @ManyToOne
-    @JoinColumn(name="create_id")
-    public UserInfo  getCreateUser() {
-        return createUser;
-    }
-
-    public void setCreateUser(UserInfo  createUser) {
-        this.createUser = createUser;
-    }
-
-    @ManyToOne
-    @JoinColumn(name="update_id")
-    public UserInfo  getUpdateUser() {
-        return updateUser;
-    }
-
-    public void setUpdateUser(UserInfo  updateUser) {
-        this.updateUser = updateUser;
-    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ContestProblem)) return false;
+        if (!super.equals(o)) return false;
         ContestProblem that = (ContestProblem) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(contestId, that.contestId) &&
-                Objects.equals(sortId, that.sortId) &&
+        return Objects.equals(contestId, that.contestId) &&
                 Objects.equals(problem, that.problem) &&
-                Objects.equals(shortname, that.shortname) &&
-                Objects.equals(allowLanguage, that.allowLanguage) &&
-                Objects.equals(timeLimit, that.timeLimit) &&
-                Objects.equals(memoryLimit, that.memoryLimit) &&
-                Objects.equals(visible, that.visible) &&
-                Objects.equals(submissionNumber, that.submissionNumber) &&
-                Objects.equals(acceptedNumber, that.acceptedNumber) &&
                 Objects.equals(submissionNumberLocked, that.submissionNumberLocked) &&
-                Objects.equals(acceptedNumberLocked, that.acceptedNumberLocked) &&
-                Objects.equals(createTime, that.createTime) &&
-                Objects.equals(updateTime, that.updateTime) &&
-                Objects.equals(createUser, that.createUser) &&
-                Objects.equals(updateUser, that.updateUser);
+                Objects.equals(acceptedNumberLocked, that.acceptedNumberLocked);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, contestId, sortId, problem, shortname, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, submissionNumberLocked, acceptedNumberLocked, createTime, updateTime, createUser, updateUser);
+        return Objects.hash(super.hashCode(), contestId, problem, submissionNumberLocked, acceptedNumberLocked);
     }
-
-
 }

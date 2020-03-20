@@ -102,56 +102,39 @@ CREATE TABLE clarification_reply (
 
 drop table if exists problem;
 CREATE TABLE problem (
-    id bigint AUTO_INCREMENT,
-		sort_id int NOT NULL COMMENT '排序id',
-		`name` text NOT NULL COMMENT '题号',
-    title text NOT NULL COMMENT '题目标题',
-    description text NOT NULL COMMENT '问题描述',
-    input_description text NOT NULL COMMENT '输入描述',
-    output_description text NOT NULL COMMENT '输出描述',
-    sample json NOT NULL COMMENT '样例们[{"input":"...","output":"..."},...]',
+    id bigint NOT NULL AUTO_INCREMENT,
+		sort_id int COMMENT '排序id',
+		`name` text COMMENT '题号',
+    title text COMMENT '题目标题',
+    description text COMMENT '问题描述',
+    input_description text COMMENT '输入描述',
+    output_description text COMMENT '输出描述',
+    sample json  COMMENT '样例们[{"input":"...","output":"..."},...]',
     hint text COMMENT '提示信息',
-		test_case_md5 text NOT NULL COMMENT 'testcase的md5,对应到本地的testcase/[md5]文件夹',
-    allow_language json NOT NULL COMMENT '[{"language":"C++","factor":1.0},{"language":"Java","factor":2.0},{"language":"Python2","factor":3.0},{"language":"Python3","factor":3.0}]',
+		test_case_md5 text COMMENT 'testcase的md5,对应到本地的testcase/[md5]文件夹',
+    allow_language json COMMENT '[{"language":"C++","factor":1.0},{"language":"Java","factor":2.0},{"language":"Python2","factor":3.0},{"language":"Python3","factor":3.0}]',
 		tag json COMMENT '["tag1","tag2",...]',
-    time_limit int NOT NULL COMMENT '时间限制(ms)',
-    memory_limit int NOT NULL COMMENT '空间限制(MB)',
-    visible bit DEFAULT 1 NOT NULL COMMENT '可见性',
-    submission_number int DEFAULT 0  NOT NULL COMMENT '题库提交次数',
-    accepted_number int DEFAULT 0 NOT NULL COMMENT '题库AC次数(同一人的ac不重复计算)',
+    time_limit int  COMMENT '时间限制(ms)',
+    memory_limit int  COMMENT '空间限制(MB)',
+    visible bit DEFAULT 1 COMMENT '可见性',
+    submission_number int DEFAULT 0 COMMENT '题库提交次数',
+    accepted_number int DEFAULT 0 COMMENT '题库AC次数(同一人的ac不重复计算)',
 		
-		create_time timestamp NOT NULL COMMENT '题目创建时间',
+		create_time timestamp COMMENT '题目创建时间',
     update_time timestamp COMMENT '最后一次更新时间',
-		create_id bigint	NOT NULL COMMENT '题目创建人',
+		create_id bigint COMMENT '题目创建人',
     update_id bigint COMMENT '最后一次更新人',
 		
-		spj bit DEFAULT 0 NOT NULL COMMENT '是否spj',
+		spj bit COMMENT '是否spj',
     spj_language text COMMENT 'spj语言',
     spj_code text COMMENT 'spj源代码',
 		spj_md5 text COMMENT 'spj源代码的md5',
-		PRIMARY KEY (id)
-);
-
-drop table if exists contest_problem;
-CREATE TABLE contest_problem (
-		id bigint AUTO_INCREMENT,
-		contest_id bigint NOT NULL COMMENT '比赛id',
-		sort_id int DEFAULT 1 NOT NULL COMMENT '排序id(默认1,按第二关键字id排)',
-		problem_id bigint NOT NULL COMMENT '题库题目id',
-		shortname text NOT NULL COMMENT '题号(在题目列表以及rank显示)',
-		allow_language json COMMENT '[{"language":"C++","factor":1.0},{"language":"Java","factor":2.0},{"language":"Python2","factor":3.0},{"language":"Python3","factor":3.0}],null或空为与原题相同',
-		time_limit int NOT NULL COMMENT '时间限制(ms),0为与原题相同',
-    memory_limit int NOT NULL COMMENT '空间限制(MB),0为与原题相同',
-		visible bit NOT NULL COMMENT '可见性(相对于比赛来说是否可见，与题库原题无关)',
-		submission_number int DEFAULT 0 NOT NULL COMMENT '赛中提交次数',
-    accepted_number int DEFAULT 0 NOT NULL COMMENT '赛中AC次数(同一人的ac不重复计算)',
-		-- 以上两项不考虑封榜
-		submission_number_locked int DEFAULT 0 NOT NULL COMMENT '封榜前赛中提交次数',
-		accepted_number_locked int DEFAULT 0 NOT NULL COMMENT '封榜前赛中AC次数(同一人的ac不重复计算)',
-		create_time timestamp NOT NULL COMMENT '赛题创建时间',
-    update_time timestamp NOT NULL COMMENT '最后一次更新时间',
-		create_id bigint	NOT NULL COMMENT '赛题创建人',
-    update_id bigint NOT NULL COMMENT '最后一次更新人',
+		
+		in_contest bit DEFAULT 0  COMMENT '是否是赛题',
+		contest_id bigint COMMENT '比赛id',
+		problem_id bigint COMMENT '题库题目id',
+		submission_number_locked int DEFAULT 0  COMMENT '封榜前赛中提交次数',
+		accepted_number_locked int DEFAULT 0  COMMENT '封榜前赛中AC次数(同一人的ac不重复计算)',
 		PRIMARY KEY (id)
 );
 
@@ -166,6 +149,7 @@ CREATE TABLE contest_problem (
 drop table if exists submission;
 CREATE TABLE submission (
     id bigint AUTO_INCREMENT,
+		in_contest bit DEFAULT 0 NOT NULL COMMENT '是否是比赛提交',
     contest_id bigint COMMENT '对应的比赛id,0为题库',
     problem_id bigint NOT NULL COMMENT '对应的题目id,比赛则为赛题id,题库则为题目id',
     user_id bigint NOT NULL COMMENT '提交人',

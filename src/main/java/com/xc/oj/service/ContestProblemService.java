@@ -91,8 +91,8 @@ public class ContestProblemService {
             data.setAllowLanguage(contestProblem.getAllowLanguage());
         if(contestProblem.getProblem()!=null)
             data.setProblem(contestProblem.getProblem());
-        if(contestProblem.getShortname()!=null)
-            data.setShortname(contestProblem.getShortname());
+        if(contestProblem.getName()!=null)
+            data.setName(contestProblem.getName());
         if(contestProblem.getSortId()!=null)
             data.setSortId(contestProblem.getSortId());
         if(contestProblem.getAllowLanguage()!=null)

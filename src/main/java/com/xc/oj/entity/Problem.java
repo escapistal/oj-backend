@@ -12,6 +12,9 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "problem", schema = "onlinejudge", catalog = "")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "in_contest", discriminatorType = DiscriminatorType.INTEGER)
+@DiscriminatorValue("0")
 public class Problem implements Serializable {
     private Long id;
     private Integer sortId;
@@ -32,8 +35,6 @@ public class Problem implements Serializable {
     private Integer acceptedNumber;
     private Timestamp createTime;
     private Timestamp updateTime;
-    //    private Integer createId;
-//    private Integer updateId;
     private Boolean spj;
     private String spjLanguage;
     private String spjCode;
@@ -41,6 +42,13 @@ public class Problem implements Serializable {
 
     private UserInfo createUser;
     private UserInfo updateUser;
+
+    public Problem() {
+    }
+
+    public Problem(Long pid) {
+        this.id=pid;
+    }
 
     @Id
     @Column(name = "id")
@@ -238,26 +246,6 @@ public class Problem implements Serializable {
         this.updateTime = updateTime;
     }
 
-//    @Basic
-//    @Column(name = "create_id")
-//    public Integer getCreateId() {
-//        return createId;
-//    }
-//
-//    public void setCreateId(Integer createId) {
-//        this.createId = createId;
-//    }
-
-//    @Basic
-//    @Column(name = "update_id")
-//    public Integer getUpdateId() {
-//        return updateId;
-//    }
-//
-//    public void setUpdateId(Integer updateId) {
-//        this.updateId = updateId;
-//    }
-
     @Basic
     @Column(name = "spj")
     public Boolean getSpj() {
@@ -317,6 +305,45 @@ public class Problem implements Serializable {
     public void setSpjMd5(String spjMd5) {
         this.spjMd5 = spjMd5;
     }
+
+    @Transient
+    public Integer getRealTimeLimit(){
+        return getTimeLimit();
+    }
+
+    @Transient
+    public Integer getRealMemoryLimit(){
+        return getMemoryLimit();
+    }
+    @Transient
+    public Integer getRealTimeLimit(String lang){
+        Integer timeLimit=getRealTimeLimit();
+        for(HashMap<String,String> mp:getRealAllowLanguage()){
+            if(mp.get("language").equals(lang)) {
+                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("time_factor")));
+                break;
+            }
+        }
+        return timeLimit;
+    }
+
+    @Transient
+    public Integer getRealMemoryLimit(String lang){
+        Integer memoryLimit=getRealMemoryLimit();
+        for(HashMap<String,String> mp:getRealAllowLanguage()){
+            if(mp.get("language").equals(lang)) {
+                memoryLimit = (int)Math.round(memoryLimit*Double.parseDouble(mp.get("memory_factor")));
+                break;
+            }
+        }
+        return memoryLimit;
+    }
+
+    @Transient
+    public List<HashMap<String,String>> getRealAllowLanguage(){
+        return getAllowLanguage();
+    }
+
 
     @Override
     public boolean equals(Object o) {

@@ -6,15 +6,17 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "in_contest", discriminatorType = DiscriminatorType.INTEGER)
+@DiscriminatorValue("0")
 public class Submission implements Serializable{
     private Long id;
-    private Long contestId;
-    private Long problemId;
+//    private Boolean inContest;
+    private Problem problem;
     private UserInfo user;
     private String language;
     private String code;
@@ -37,24 +39,24 @@ public class Submission implements Serializable{
         this.id = id;
     }
 
-    @Basic
-    @Column(name = "contest_id")
-    public Long getContestId() {
-        return contestId;
+//    @Basic
+//    @Column(name = "in_contest")
+//    public Boolean getInContest() {
+//        return inContest;
+//    }
+//
+//    public void setInContest(Boolean inContest) {
+//        this.inContest = inContest;
+//    }
+
+    @ManyToOne
+    @JoinColumn(name="problem_id")
+    public Problem getProblem() {
+        return problem;
     }
 
-    public void setContestId(Long contestId) {
-        this.contestId = contestId;
-    }
-
-    @Basic
-    @Column(name = "problem_id")
-    public Long getProblemId() {
-        return problemId;
-    }
-
-    public void setProblemId(Long problemId) {
-        this.problemId = problemId;
+    public void setProblem(Problem problem) {
+        this.problem = problem;
     }
 
     @ManyToOne
@@ -166,13 +168,12 @@ public class Submission implements Serializable{
         if (!(o instanceof Submission)) return false;
         Submission that = (Submission) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(contestId, that.contestId) &&
-                Objects.equals(problemId, that.problemId) &&
+                Objects.equals(problem, that.problem) &&
                 Objects.equals(user, that.user) &&
                 Objects.equals(language, that.language) &&
                 Objects.equals(code, that.code) &&
                 Objects.equals(createTime, that.createTime) &&
-                Objects.equals(status, that.status) &&
+                status == that.status &&
                 Objects.equals(executeTime, that.executeTime) &&
                 Objects.equals(executeMemory, that.executeMemory) &&
                 Objects.equals(codeLength, that.codeLength) &&
@@ -182,7 +183,6 @@ public class Submission implements Serializable{
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(id, contestId, problemId, user, language, code, createTime, status, executeTime, executeMemory, codeLength, detail, judgeTime);
+        return Objects.hash(id, problem, user, language, code, createTime, status, executeTime, executeMemory, codeLength, detail, judgeTime);
     }
 }

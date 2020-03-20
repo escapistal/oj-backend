@@ -46,19 +46,17 @@ public class SubmissionService {
 
     public responseBase<Page<Submission>> list(Long cid, Long pid, Long uid, String uname,int page,int size) {
         Page<Submission> submissions;
-        if(cid!=null&&cid>0) {//TODO 比赛status，cid筛选预计废弃，涉及contest的逻辑另外做，不支持筛选
-            Contest contest=contestService.findById(cid).orElse(null);
-            if(contest==null)
-                return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-            Timestamp now=new Timestamp(new Date().getTime());
-            if(!AuthUtil.has("admin")&&!now.after(contest.getEndTime()))
-                return responseBuilder.fail(responseCode.FORBIDDEN);
-        }
+//        if(cid!=null&&cid>0) {//TODO 比赛status，cid筛选预计废弃，涉及contest的逻辑另外做，不支持筛选
+//            Contest contest=contestService.findById(cid).orElse(null);
+//            if(contest==null)
+//                return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+//            Timestamp now=new Timestamp(new Date().getTime());
+//            if(!AuthUtil.has("admin")&&!now.after(contest.getEndTime()))
+//                return responseBuilder.fail(responseCode.FORBIDDEN);
+//        }
         Submission submission=new Submission();
-        if(cid!=null)//预计废弃，同上
-            submission.setContestId(cid);
         if(pid!=null)
-            submission.setProblemId(pid);
+            submission.getProblem().setId(pid);
         if(uid!=null)//uid优先
             submission.setUser(new UserInfo(uid));
         else if(uname!=null&&!"".equals(uname.trim())) {
@@ -94,55 +92,57 @@ public class SubmissionService {
         submission.setCreateTime(new Timestamp(new Date().getTime()));
         submission.setExecuteTime(0);
         submission.setExecuteMemory(0);
-        if(submission.getContestId()==null)
-            submission.setContestId(0L);
         submissionRepository.save(submission);
-        Long cid=submission.getContestId();
-        Long pid=submission.getProblemId();
-        ContestProblem contestProblem;
-        Problem problem;
-        Integer timeLimit;
-        Integer memoryLimit;
-        List<HashMap<String,String>> allowLanguage;
-        if(cid!=0) {
-            contestProblem=contestProblemService.findById(pid).orElse(null);
-            if(contestProblem==null)
-                return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
-            problem=contestProblem.getProblem();
-            timeLimit=contestProblem.getTimeLimit();
-            memoryLimit=contestProblem.getMemoryLimit();
-            allowLanguage=contestProblem.getAllowLanguage();
-            if(timeLimit==null||timeLimit==0)
-                timeLimit=problem.getTimeLimit();
-            if(memoryLimit==null||memoryLimit==0)
-                memoryLimit=problem.getMemoryLimit();
-            if(allowLanguage==null||allowLanguage.isEmpty())
-                allowLanguage=problem.getAllowLanguage();
-        }
-        else {
-            problem = problemService.findById(pid).orElse(null);
-            if(problem==null)
-                return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
-            timeLimit=problem.getTimeLimit();
-            memoryLimit=problem.getMemoryLimit();
-            allowLanguage=problem.getAllowLanguage();
-        }
-        for(HashMap<String,String> mp:allowLanguage) {
-            if(mp.get("language").equals(submission.getLanguage())) {
-                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("factor")));
-                break;
-            }
-        }
+
+//        Long cid=submission.getContestId();
+//        Long pid=submission.getProblemId();
+//        ContestProblem contestProblem;
+//        Problem problem;
+//        Integer timeLimit;
+//        Integer memoryLimit;
+//        List<HashMap<String,String>> allowLanguage;
+//        if(cid!=0) {
+//            contestProblem=contestProblemService.findById(pid).orElse(null);
+//            if(contestProblem==null)
+//                return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
+//            problem=contestProblem.getProblem();
+//            timeLimit=contestProblem.getTimeLimit();
+//            memoryLimit=contestProblem.getMemoryLimit();
+//            allowLanguage=contestProblem.getAllowLanguage();
+//            if(timeLimit==null||timeLimit==0)
+//                timeLimit=problem.getTimeLimit();
+//            if(memoryLimit==null||memoryLimit==0)
+//                memoryLimit=problem.getMemoryLimit();
+//            if(allowLanguage==null||allowLanguage.isEmpty())
+//                allowLanguage=problem.getAllowLanguage();
+//        }
+//        else {
+//            problem = problemService.findById(pid).orElse(null);
+//            if(problem==null)
+//                return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
+//            timeLimit=problem.getTimeLimit();
+//            memoryLimit=problem.getMemoryLimit();
+//            allowLanguage=problem.getAllowLanguage();
+//        }
+//        for(HashMap<String,String> mp:allowLanguage) {
+//            if(mp.get("language").equals(submission.getLanguage())) {
+//                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("factor")));
+//                break;
+//            }
+//        }
+        Problem problem=problemService.findById(submission.getProblem().getId()).orElse(null);
         JudgeTask judgeTask=new JudgeTask();
         judgeTask.setLazyEval(Boolean.parseBoolean(OJPropertiesUtil.get("lazy-eval")));
         judgeTask.setSubmissionId(submission.getId());
         judgeTask.setLanguage(submission.getLanguage());
         judgeTask.setCode(submission.getCode());
-        judgeTask.setTimeLimit(timeLimit);
-        judgeTask.setMemoryLimit(memoryLimit);
+        judgeTask.setTimeLimit(problem.getRealTimeLimit(submission.getLanguage()));
+        judgeTask.setMemoryLimit(problem.getRealMemoryLimit(submission.getLanguage()));
         judgeTask.setTestcaseMd5(problem.getTestCaseMd5());
-        if(problem.getSpj())
-            judgeTask.setSpjMd5(problem.getSpjMd5());
+        System.out.println(judgeTask.getTimeLimit());
+        System.out.println(judgeTask.getMemoryLimit());
+//        if(problem.getSpj())
+//            judgeTask.setSpjMd5(problem.getSpjMd5());
         redisTemplate.opsForList().leftPush("JudgeTask",judgeTask);
         return responseBuilder.success();
     }
@@ -178,8 +178,10 @@ public class SubmissionService {
         submission.setJudgeTime(new Timestamp(new Date().getTime()));
         submissionRepository.save(submission);
 
-        Long cid=submission.getContestId();
-        Long pid=submission.getProblemId();
+        Long cid=0l;
+        if(submission.getProblem() instanceof ContestProblem)
+            cid=((ContestSubmission)submission).getContestId();
+        Long pid=submission.getProblem().getId();
         Contest contest;
         ContestProblem contestProblem;
         Problem problem;
