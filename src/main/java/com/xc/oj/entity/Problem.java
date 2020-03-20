@@ -1,6 +1,7 @@
 package com.xc.oj.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -306,19 +307,11 @@ public class Problem implements Serializable {
         this.spjMd5 = spjMd5;
     }
 
-    @Transient
-    public Integer getRealTimeLimit(){
-        return getTimeLimit();
-    }
-
-    @Transient
-    public Integer getRealMemoryLimit(){
-        return getMemoryLimit();
-    }
+    @JsonIgnore
     @Transient
     public Integer getRealTimeLimit(String lang){
-        Integer timeLimit=getRealTimeLimit();
-        for(HashMap<String,String> mp:getRealAllowLanguage()){
+        Integer timeLimit=getTimeLimit();
+        for(HashMap<String,String> mp:getAllowLanguage()){
             if(mp.get("language").equals(lang)) {
                 timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("time_factor")));
                 break;
@@ -327,10 +320,11 @@ public class Problem implements Serializable {
         return timeLimit;
     }
 
+    @JsonIgnore
     @Transient
     public Integer getRealMemoryLimit(String lang){
-        Integer memoryLimit=getRealMemoryLimit();
-        for(HashMap<String,String> mp:getRealAllowLanguage()){
+        Integer memoryLimit=getMemoryLimit();
+        for(HashMap<String,String> mp:getAllowLanguage()){
             if(mp.get("language").equals(lang)) {
                 memoryLimit = (int)Math.round(memoryLimit*Double.parseDouble(mp.get("memory_factor")));
                 break;
@@ -338,12 +332,6 @@ public class Problem implements Serializable {
         }
         return memoryLimit;
     }
-
-    @Transient
-    public List<HashMap<String,String>> getRealAllowLanguage(){
-        return getAllowLanguage();
-    }
-
 
     @Override
     public boolean equals(Object o) {

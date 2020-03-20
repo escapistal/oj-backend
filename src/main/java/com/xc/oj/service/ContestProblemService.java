@@ -54,7 +54,7 @@ public class ContestProblemService {
         if(contestProblem==null)
             return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
         if(!AuthUtil.has("admin")) {
-            Contest contest=contestService.findById(contestProblem.getContestId()).orElse(null);
+            Contest contest=contestService.findById(contestProblem.getContest().getId()).orElse(null);
             Timestamp now=new Timestamp(new Date().getTime());
             if(now.before(contest.getStartTime()))
                 return responseBuilder.fail(responseCode.CONTEST_NOT_STARTED);
@@ -63,7 +63,7 @@ public class ContestProblemService {
     }
 
     public responseBase<String> add(ContestProblem contestProblem){
-        if(contestProblem.getContestId()==null||!contestService.existsById(contestProblem.getContestId()))
+        if(contestProblem.getContest().getId()==null||!contestService.existsById(contestProblem.getContest().getId()))
             return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
         contestProblem.setCreateUser(new UserInfo(AuthUtil.getId()));
         contestProblem.setCreateTime(new Timestamp(new Date().getTime()));
