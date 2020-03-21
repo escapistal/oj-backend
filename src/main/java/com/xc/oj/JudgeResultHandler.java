@@ -1,6 +1,7 @@
 package com.xc.oj;
 
 import com.xc.oj.entity.JudgeResult;
+import com.xc.oj.service.CommonService;
 import com.xc.oj.service.SubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -15,7 +16,7 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
     RedisTemplate redisTemplate;
 
     @Autowired
-    SubmissionService submissionService;
+    CommonService commonService;
 
     @Override
     public void run() {
@@ -24,7 +25,7 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
                 JudgeResult judgeResult = (JudgeResult) redisTemplate.opsForList().rightPop("JudgeResult", 0, TimeUnit.SECONDS);
                 if (judgeResult == null)
                     continue;
-                submissionService.updateResult(judgeResult);
+                commonService.updateSubmissionResult(judgeResult);
             }catch(Exception e){
 //                System.out.println("tick-tok");
             }

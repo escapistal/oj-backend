@@ -9,6 +9,7 @@ public enum JudgeResultEnum {
     MLE("Memory Limit Exceed"),
     RE("Runtime Error"),
     PE("Presentation Error"),
+    CE("Compile Error"),
     SE("System Error")
     ;
 

@@ -15,7 +15,6 @@ import java.util.Objects;
 @DiscriminatorColumn(name = "in_contest", discriminatorType = DiscriminatorType.INTEGER)
 public class SubmissionBase implements Serializable{
     private Long id;
-    //    private Boolean inContest;
     private ProblemBase problem;
     private UserInfo user;
     private String language;
@@ -38,16 +37,6 @@ public class SubmissionBase implements Serializable{
     public void setId(Long id) {
         this.id = id;
     }
-
-//    @Basic
-//    @Column(name = "in_contest")
-//    public Boolean getInContest() {
-//        return inContest;
-//    }
-//
-//    public void setInContest(Boolean inContest) {
-//        this.inContest = inContest;
-//    }
 
     @ManyToOne
     @JoinColumn(name="problem_id")

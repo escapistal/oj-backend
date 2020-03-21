@@ -1,21 +1,20 @@
 package com.xc.oj.entity;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import javax.persistence.*;
 
 @Entity
 @DiscriminatorValue("1")
 public class ContestSubmission extends SubmissionBase{
-    private Long contestId;
-    @Basic
-    @Column(name = "contest_id")
-    public Long getContestId() {
-        return contestId;
+    private ContestInfo contest;
+
+    @ManyToOne
+    @JoinColumn(name="contest_id")
+    public ContestInfo getContest() {
+        return contest;
     }
 
-    public void setContestId(Long contestId) {
-        this.contestId = contestId;
+    public void setContest(ContestInfo contest) {
+        this.contest = contest;
     }
+
 }
