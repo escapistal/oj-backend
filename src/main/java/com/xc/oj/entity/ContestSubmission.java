@@ -7,7 +7,7 @@ import javax.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("1")
-public class ContestSubmission extends Submission{
+public class ContestSubmission extends SubmissionBase{
     private Long contestId;
     @Basic
     @Column(name = "contest_id")

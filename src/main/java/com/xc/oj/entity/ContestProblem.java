@@ -9,9 +9,8 @@ import java.util.Objects;
 
 @Entity
 @DiscriminatorValue("1")
-//@Table(name = "contest_problem", schema = "onlinejudge", catalog = "")
 public class ContestProblem extends ProblemBase{
-    private Contest contest;
+    private ContestInfo contest;
     private Problem problem;
     private Integer submissionNumberLocked;
     private Integer acceptedNumberLocked;
@@ -25,11 +24,11 @@ public class ContestProblem extends ProblemBase{
 
     @ManyToOne
     @JoinColumn(name="contest_id")
-    public Contest getContest() {
+    public ContestInfo getContest() {
         return contest;
     }
 
-    public void setContest(Contest contest) {
+    public void setContest(ContestInfo contest) {
         this.contest = contest;
     }
 
