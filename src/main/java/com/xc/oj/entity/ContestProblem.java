@@ -10,7 +10,7 @@ import java.util.Objects;
 @Entity
 @DiscriminatorValue("1")
 //@Table(name = "contest_problem", schema = "onlinejudge", catalog = "")
-public class ContestProblem extends Problem{
+public class ContestProblem extends ProblemBase{
     private Contest contest;
     private Problem problem;
     private Integer submissionNumberLocked;
@@ -119,31 +119,31 @@ public class ContestProblem extends Problem{
         return super.getSpjMd5()==null?problem.getSpjMd5():super.getSpjMd5();
     }
 
-    @JsonIgnore
-    @Transient
-    public Integer getRealTimeLimit(String lang){
-        Integer timeLimit=getTimeLimit();
-        for(HashMap<String,String> mp:getAllowLanguage()){
-            if(mp.get("language").equals(lang)) {
-                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("time_factor")));
-                break;
-            }
-        }
-        return timeLimit;
-    }
-
-    @JsonIgnore
-    @Transient
-    public Integer getRealMemoryLimit(String lang){
-        Integer memoryLimit=getMemoryLimit();
-        for(HashMap<String,String> mp:getAllowLanguage()){
-            if(mp.get("language").equals(lang)) {
-                memoryLimit = (int)Math.round(memoryLimit*Double.parseDouble(mp.get("memory_factor")));
-                break;
-            }
-        }
-        return memoryLimit;
-    }
+//    @JsonIgnore
+//    @Transient
+//    public Integer getRealTimeLimit(String lang){
+//        Integer timeLimit=getTimeLimit();
+//        for(HashMap<String,String> mp:getAllowLanguage()){
+//            if(mp.get("language").equals(lang)) {
+//                timeLimit = (int)Math.round(timeLimit*Double.parseDouble(mp.get("time_factor")));
+//                break;
+//            }
+//        }
+//        return timeLimit;
+//    }
+//
+//    @JsonIgnore
+//    @Transient
+//    public Integer getRealMemoryLimit(String lang){
+//        Integer memoryLimit=getMemoryLimit();
+//        for(HashMap<String,String> mp:getAllowLanguage()){
+//            if(mp.get("language").equals(lang)) {
+//                memoryLimit = (int)Math.round(memoryLimit*Double.parseDouble(mp.get("memory_factor")));
+//                break;
+//            }
+//        }
+//        return memoryLimit;
+//    }
 
 
     @Override

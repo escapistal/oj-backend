@@ -16,7 +16,7 @@ import java.util.Objects;
 public class Submission implements Serializable{
     private Long id;
 //    private Boolean inContest;
-    private Problem problem;
+    private ProblemBase problem;
     private UserInfo user;
     private String language;
     private String code;
@@ -51,11 +51,11 @@ public class Submission implements Serializable{
 
     @ManyToOne
     @JoinColumn(name="problem_id")
-    public Problem getProblem() {
+    public ProblemBase getProblem() {
         return problem;
     }
 
-    public void setProblem(Problem problem) {
+    public void setProblem(ProblemBase problem) {
         this.problem = problem;
     }
 
