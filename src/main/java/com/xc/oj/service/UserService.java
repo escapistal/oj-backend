@@ -113,7 +113,11 @@ public class UserService  {
         final Authentication authentication = authenticationManager.authenticate(upToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         Map<String,Object> claims=new HashMap<>();
-        List<User> users=userRepository.findByUsername(username);
+        List<User> users;
+        if(username.contains("@"))
+            users=userRepository.findByEmail(username);
+        else
+            users=userRepository.findByUsername(username);
         User user=users.get(0);
         claims.put("userId",user.getId());
         claims.put("userRole",user.getRole());

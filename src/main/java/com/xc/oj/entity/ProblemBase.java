@@ -42,6 +42,13 @@ public class ProblemBase implements Serializable {
     private UserInfo createUser;
     private UserInfo updateUser;
 
+    public ProblemBase() {
+    }
+
+    public ProblemBase(Long id) {
+        this.id=id;
+    }
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

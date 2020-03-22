@@ -10,12 +10,19 @@ import java.sql.Timestamp;
 public class ContestInfo {
     private Long id;
     private String title;
+    private Boolean realTimeRank;
     private Integer penaltyTime;
     private Timestamp startTime;
     private Timestamp endTime;
     private Boolean willLock;
     private Timestamp lockTime;
 
+    public ContestInfo() {
+    }
+
+    public ContestInfo(Long id) {
+        this.id=id;
+    }
 
     @Id
     @Column(name = "id")
@@ -36,6 +43,16 @@ public class ContestInfo {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Basic
+    @Column(name = "real_time_rank")
+    public Boolean getRealTimeRank() {
+        return realTimeRank;
+    }
+
+    public void setRealTimeRank(Boolean realTimeRank) {
+        this.realTimeRank = realTimeRank;
     }
 
     @Basic

@@ -1,32 +1,78 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.*;
+import com.xc.oj.repository.ContestSubmissionRepository;
+import com.xc.oj.repository.SubmissionBaseRepository;
+import com.xc.oj.repository.SubmissionRepository;
+import com.xc.oj.response.responseBase;
+import com.xc.oj.response.responseBuilder;
+import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.OJPropertiesUtil;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
 @Service
 public class CommonService {
 
-    final SubmissionBaseService submissionBaseService;
-    final SubmissionService submissionService;
-    final ContestSubmissionService contestSubmissionService;
+    final SubmissionBaseRepository submissionBaseService;
+    final SubmissionRepository submissionService;
+    final ContestSubmissionRepository contestSubmissionService;
     final AcmContestRankService acmContestRankService;
     final UserService userService;
+    final ProblemBaseService problemBaseService;
     final ProblemService problemService;
     final ContestProblemService contestProblemService;
+    private final RedisTemplate<String,Object> redisTemplate;
 
-    public CommonService(SubmissionBaseService submissionBaseService, SubmissionService submissionService, ContestSubmissionService contestSubmissionService, AcmContestRankService acmContestRankService, UserService userService, ProblemService problemService, ContestProblemService contestProblemService) {
+    public CommonService(SubmissionBaseRepository submissionBaseService, SubmissionRepository submissionService, ContestSubmissionRepository contestSubmissionService, AcmContestRankService acmContestRankService, UserService userService, ProblemBaseService problemBaseService, ProblemService problemService, ContestProblemService contestProblemService, RedisTemplate<String, Object> redisTemplate) {
         this.submissionBaseService = submissionBaseService;
         this.submissionService = submissionService;
         this.contestSubmissionService = contestSubmissionService;
         this.acmContestRankService = acmContestRankService;
         this.userService = userService;
+        this.problemBaseService = problemBaseService;
         this.problemService = problemService;
         this.contestProblemService = contestProblemService;
+        this.redisTemplate = redisTemplate;
+    }
+
+    public responseBase<String> submit(SubmissionBase submission){
+        submission.setStatus(JudgeResultEnum.PENDING);
+        submission.setCodeLength(submission.getCode().length());
+        submission.setDetail(new ArrayList<>());
+        submission.setUser(new UserInfo(AuthUtil.getId()));
+        submission.setCreateTime(new Timestamp(new Date().getTime()));
+        submission.setExecuteTime(0);
+        submission.setExecuteMemory(0);
+        submissionBaseService.save(submission);
+        ProblemBase problem=problemBaseService.findById(submission.getProblem().getId()).orElse(null);
+//        if(submission instanceof Submission) {//题库
+//            submissionService.save((Submission) submission);
+//            problem=problemService.findById(submission.getProblem().getId()).orElse(null);
+//        }
+//        else {//赛题
+//            contestSubmissionService.save((ContestSubmission) submission);
+//            problem=contestProblemService.findById(submission.getProblem().getId()).orElse(null);
+//        }
+        JudgeTask judgeTask=new JudgeTask();
+        judgeTask.setLazyEval(Boolean.parseBoolean(OJPropertiesUtil.get("lazy-eval")));
+        judgeTask.setSubmissionId(submission.getId());
+        judgeTask.setLanguage(submission.getLanguage());
+        judgeTask.setCode(submission.getCode());
+        judgeTask.setTimeLimit(problem.getRealTimeLimit(submission.getLanguage()));
+        judgeTask.setMemoryLimit(problem.getRealMemoryLimit(submission.getLanguage()));
+        judgeTask.setTestcaseMd5(problem.getTestCaseMd5());
+        System.out.println(judgeTask.getTimeLimit());
+        System.out.println(judgeTask.getMemoryLimit());
+        if(problem.getSpj())
+            judgeTask.setSpjMd5(problem.getSpjMd5());
+        redisTemplate.opsForList().leftPush("JudgeTask",judgeTask);
+        return responseBuilder.success();
     }
 
     private void getSummary(SubmissionBase submission,JudgeResult judgeResult){//补充评测细节并存库
@@ -161,4 +207,5 @@ public class CommonService {
             acmContestRankService.save(acmContestRankLocked);
         }
     }
+
 }
