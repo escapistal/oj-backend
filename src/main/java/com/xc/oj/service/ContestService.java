@@ -72,6 +72,8 @@ public class ContestService {
         Contest contest=contestRepository.findById(id).orElse(null);
         if(contest==null)
             return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+//        if(!contest.getVisible()&&!AuthUtil.has("admin"))
+//            return responseBuilder.fail(responseCode.FORBIDDEN);
         return responseBuilder.success(contest);
     }
 

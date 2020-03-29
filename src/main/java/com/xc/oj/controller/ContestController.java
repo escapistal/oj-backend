@@ -26,7 +26,7 @@ public class ContestController {
         return contestService.list(checkVisible,state,page,size);
     }
 
-    @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")
+    @PostAuthorize("returnObject.status!=0 or returnObject.data.visible == true or hasAuthority('admin')")
     @RequestMapping(value = "/{id}",method = RequestMethod.GET)
     public responseBase<Contest> get(@PathVariable Long id){
         return contestService.get(id);

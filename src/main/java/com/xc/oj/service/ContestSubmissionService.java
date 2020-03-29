@@ -39,7 +39,9 @@ public class ContestSubmissionService {
         contestSubmissionRepository.save(contestSubmission);
     }
 
-    public responseBase<Page<ContestSubmission>> list(Long cid, Long pid, Long uid, String uname, int page, int size) {
+    public responseBase<Page<ContestSubmission>> list(Long cid, Long pid, Long uid, String uname,
+                                                      JudgeResultEnum status,String lang,
+                                                      int page, int size) {
         //cid与pid至少提供1个，若不匹配，优先按pid所属的contest
         if(cid==null&&pid==null)
             return responseBuilder.fail(responseCode.FORBIDDEN);
@@ -49,7 +51,7 @@ public class ContestSubmissionService {
         boolean willLock,realTimeRank,isAdmin=AuthUtil.has("admin");
         if(pid!=null) {
             problem = contestProblemService.findById(pid).orElse(null);
-            if (problem == null || !problem.getVisible()&&isAdmin)
+            if (problem == null || !problem.getVisible()&&!isAdmin)
                 return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
             cid=problem.getContest().getId();
             start=problem.getContest().getStartTime();
@@ -86,6 +88,12 @@ public class ContestSubmissionService {
                         criteriaBuilder.like(root.get("user").get("realname"),"%"+uname+"%"));
                 predicate=criteriaBuilder.and(predicate,p);
             }
+            if(status!=null){
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("status"),status));
+            }
+            if(lang!=null){
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("language"),lang));
+            }
             if(AuthUtil.has("admin")) {//管理员查询，无条件返回所有筛选下的数据
                 return predicate;
             }
@@ -112,6 +120,7 @@ public class ContestSubmissionService {
     }
 
     public responseBase<String> submit(ContestSubmission submission) {
+//        submission.setContest(((ContestProblem)submission.getProblem()).getContest());
         return commonService.submit(submission);
     }
 

@@ -1,6 +1,7 @@
 package com.xc.oj.controller;
 
 import com.xc.oj.entity.ContestSubmission;
+import com.xc.oj.entity.JudgeResultEnum;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.ContestSubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,17 @@ public class ContestSubmissionController {
             @RequestParam(required = false) Long pid,
             @RequestParam(required = false) Long uid,
             @RequestParam(required = false) String uname,
+            @RequestParam(required = false) JudgeResultEnum status,
+            @RequestParam(required = false) String lang,
             @RequestParam int page,
             @RequestParam int size
     ){
-        return contestSubmissionService.list(cid,pid,uid,uname,page,size);
+        if("".equals(cid))cid=null;
+        if("".equals(pid))pid=null;
+        if("".equals(uid))uid=null;
+        if("".equals(uname))uname=null;
+        if("".equals(lang))lang=null;
+        return contestSubmissionService.list(cid,pid,uid,uname,status,lang,page,size);
     }
 
     @PostAuthorize("returnObject.status !=0 or returnObject.data.user.id == principal.id or hasAuthority('admin')")

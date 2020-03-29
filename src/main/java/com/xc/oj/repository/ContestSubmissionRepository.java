@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ContestSubmissionRepository extends JpaRepository<ContestSubmission, Long>, JpaSpecificationExecutor<ContestSubmission> {
 
-
 }

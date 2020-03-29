@@ -42,23 +42,17 @@ public class CommonService {
     }
 
     public responseBase<String> submit(SubmissionBase submission){
+
         submission.setStatus(JudgeResultEnum.PENDING);
         submission.setCodeLength(submission.getCode().length());
-        submission.setDetail(new ArrayList<>());
+//        submission.setDetail(new ArrayList<>());
         submission.setUser(new UserInfo(AuthUtil.getId()));
         submission.setCreateTime(new Timestamp(new Date().getTime()));
-        submission.setExecuteTime(0);
-        submission.setExecuteMemory(0);
+//        submission.setExecuteTime(0);
+//        submission.setExecuteMemory(0);
         submissionBaseService.save(submission);
         ProblemBase problem=problemBaseService.findById(submission.getProblem().getId()).orElse(null);
-//        if(submission instanceof Submission) {//题库
-//            submissionService.save((Submission) submission);
-//            problem=problemService.findById(submission.getProblem().getId()).orElse(null);
-//        }
-//        else {//赛题
-//            contestSubmissionService.save((ContestSubmission) submission);
-//            problem=contestProblemService.findById(submission.getProblem().getId()).orElse(null);
-//        }
+
         JudgeTask judgeTask=new JudgeTask();
         judgeTask.setLazyEval(Boolean.parseBoolean(OJPropertiesUtil.get("lazy-eval")));
         judgeTask.setSubmissionId(submission.getId());
