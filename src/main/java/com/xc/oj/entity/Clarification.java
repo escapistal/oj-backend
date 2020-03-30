@@ -11,7 +11,7 @@ import java.util.Objects;
 public class Clarification implements Comparable<Clarification>{
     private Long id;
     private Long contestId;
-    private Long problemId;
+    private ContestProblem problem;
     private String content;
     private UserInfo createUser;
     private Timestamp createTime;
@@ -38,14 +38,14 @@ public class Clarification implements Comparable<Clarification>{
         this.contestId = contestId;
     }
 
-    @Basic
-    @Column(name = "problem_id")
-    public Long getProblemId() {
-        return problemId;
+    @ManyToOne
+    @JoinColumn(name="problem_id")
+    public ContestProblem getProblem() {
+        return problem;
     }
 
-    public void setProblemId(Long problemId) {
-        this.problemId = problemId;
+    public void setProblem(ContestProblem problem) {
+        this.problem = problem;
     }
 
     @Basic
@@ -96,7 +96,7 @@ public class Clarification implements Comparable<Clarification>{
         Clarification that = (Clarification) o;
         return Objects.equals(id, that.id) &&
                 Objects.equals(contestId, that.contestId) &&
-                Objects.equals(problemId, that.problemId) &&
+                Objects.equals(problem, that.problem) &&
                 Objects.equals(content, that.content) &&
                 Objects.equals(createUser, that.createUser) &&
                 Objects.equals(createTime, that.createTime);
@@ -104,7 +104,7 @@ public class Clarification implements Comparable<Clarification>{
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, contestId, problemId, content, createUser, createTime);
+        return Objects.hash(id, contestId, problem, content, createUser, createTime);
     }
 
     @Override

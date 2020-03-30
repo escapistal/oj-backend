@@ -83,4 +83,5 @@ public class ClarificationReply {
     public int hashCode() {
         return Objects.hash(id, clarId, content, createUser, createTime);
     }
+
 }

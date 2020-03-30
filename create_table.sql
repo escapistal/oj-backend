@@ -83,7 +83,7 @@ drop table if exists clarification;
 CREATE TABLE clarification (
     id bigint AUTO_INCREMENT,
 		contest_id bigint NOT NULL COMMENT '比赛id',
-		problem_id bigint NOT NULL COMMENT '对应的赛题id,0则为General clarification',
+		problem_id bigint COMMENT '对应的赛题id,0则为General clarification',
 		content text NOT NULL COMMENT '提问内容',
 		create_id bigint NOT NULL COMMENT '提问人id',
     create_time timestamp NOT NULL COMMENT '提问时间',

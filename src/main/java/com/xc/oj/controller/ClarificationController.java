@@ -31,7 +31,7 @@ public class ClarificationController {
     }
 
     @RequestMapping(value = "/add",method = RequestMethod.POST)
-    public responseBase<Clarification> add(@RequestBody Clarification clarification){
+    public responseBase<String> add(@RequestBody Clarification clarification){
         return clarificationService.add(clarification);
     }
 
