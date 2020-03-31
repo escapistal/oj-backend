@@ -57,6 +57,8 @@ public class ClarificationService {
         clarification.setCreateTime(new Timestamp(new Date().getTime()));
         clarification.setCreateUser(new UserInfo(AuthUtil.getId()));
         clarification.setReply(new ArrayList<>());
+        clarification.setReadByAdmin(false);
+        clarification.setReadByUser(true);
         clarificationRepository.save(clarification);
         return responseBuilder.success();
     }
@@ -65,10 +67,13 @@ public class ClarificationService {
         Clarification clarification=clarificationRepository.findById(clarificationReply.getClarId()).orElse(null);
         if(clarification==null)
             return responseBuilder.fail(responseCode.CLARIFICATION_NOT_EXIST);
-        if(!AuthUtil.has("admin")&&AuthUtil.getId()!=clarification.getCreateUser().getId())
+        boolean isAdmin=AuthUtil.has("admin");
+        if(!isAdmin&&AuthUtil.getId()!=clarification.getCreateUser().getId())
             return responseBuilder.fail(responseCode.FORBIDDEN);
         clarificationReply.setCreateTime(new Timestamp(new Date().getTime()));
         clarificationReply.setCreateUser(new UserInfo(AuthUtil.getId()));
+        clarification.setReadByAdmin(isAdmin);
+        clarification.setReadByUser(!isAdmin);
         clarificationReplyRepository.save(clarificationReply);
         return responseBuilder.success();
     }
@@ -81,7 +86,7 @@ public class ClarificationService {
             clarifications=clarificationRepository.findByContestIdAndCreateUser(cid,new UserInfo(AuthUtil.getId()));
         //TODO 懒加载
         clarifications.forEach(c->c.setReply(null));
-        Collections.sort(clarifications);
+//        Collections.sort(clarifications);
         return responseBuilder.success(clarifications);
     }
 }

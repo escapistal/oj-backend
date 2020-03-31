@@ -12,6 +12,7 @@ public class ContestAnnouncement {
     private Long id;
     private Integer sortId;
     private Long contestId;
+    private ContestProblem problem;
     private String title;
     private String content;
     private Boolean visible;
@@ -49,6 +50,16 @@ public class ContestAnnouncement {
 
     public void setContestId(Long contestId) {
         this.contestId = contestId;
+    }
+
+    @ManyToOne
+    @JoinColumn(name="problem_id")
+    public ContestProblem getProblem() {
+        return problem;
+    }
+
+    public void setProblem(ContestProblem problem) {
+        this.problem = problem;
     }
 
     @Basic
@@ -116,6 +127,7 @@ public class ContestAnnouncement {
 
     @Basic
     @Column(name = "update_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     public Timestamp getUpdateTime() {
         return updateTime;
     }

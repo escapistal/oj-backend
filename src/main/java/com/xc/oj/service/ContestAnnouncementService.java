@@ -1,13 +1,13 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.ContestAnnouncement;
+import com.xc.oj.entity.ContestProblem;
 import com.xc.oj.entity.UserInfo;
 import com.xc.oj.repository.ContestAnnouncementRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
-import org.omg.CORBA.DATA_CONVERSION;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -18,10 +18,12 @@ import java.util.Optional;
 @Service
 public class ContestAnnouncementService {
     private final ContestService contestService;
+    private final ContestProblemService contestProblemService;
     private final ContestAnnouncementRepository contestAnnouncementRepository;
 
-    public ContestAnnouncementService(ContestService contestService, ContestAnnouncementRepository contestAnnouncementRepository) {
+    public ContestAnnouncementService(ContestService contestService, ContestProblemService contestProblemService, ContestAnnouncementRepository contestAnnouncementRepository) {
         this.contestService = contestService;
+        this.contestProblemService = contestProblemService;
         this.contestAnnouncementRepository = contestAnnouncementRepository;
     }
 
@@ -39,6 +41,7 @@ public class ContestAnnouncementService {
             contestAnnouncements=contestAnnouncementRepository.findByContestId(cid);
         else
             contestAnnouncements=contestAnnouncementRepository.findByContestIdAndVisible(cid,true);
+        contestAnnouncements.forEach(a->a.setContent(null));
         return responseBuilder.success(contestAnnouncements);
     }
 
@@ -50,8 +53,18 @@ public class ContestAnnouncementService {
     }
 
     public responseBase<String> add(ContestAnnouncement contestAnnouncement){
-        if(contestAnnouncement.getContestId()==null||!contestService.existsById(contestAnnouncement.getContestId()))
-            return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        if(contestAnnouncement.getProblem()!=null&&contestAnnouncement.getProblem().getId()!=null) {
+            ContestProblem problem = contestProblemService.findById(contestAnnouncement.getProblem().getId()).orElse(null);
+            if(problem==null)
+                return responseBuilder.fail(responseCode.CONTEST_PROBLEM_NOT_EXIST);
+            contestAnnouncement.setContestId(problem.getContest().getId());
+        }
+        else if(contestAnnouncement.getContestId()!=null){
+            if(!contestService.existsById(contestAnnouncement.getContestId()))
+                return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
+        }
+        else
+            return responseBuilder.fail(responseCode.FORBIDDEN);
         if(contestAnnouncement.getVisible()==null)
             contestAnnouncement.setVisible(true);
         if(contestAnnouncement.getSortId()==null)

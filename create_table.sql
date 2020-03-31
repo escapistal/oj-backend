@@ -68,6 +68,7 @@ CREATE TABLE contest_announcement (
     id bigint AUTO_INCREMENT,
 		sort_id int NOT NULL COMMENT '排序id',
 		contest_id bigint NOT NULL COMMENT '比赛id',
+		problem_id bigint COMMENT '对应的赛题id,NULL则为General clarification',
     title text NOT NULL COMMENT '公告标题',
     content text NOT NULL COMMENT '公告内容',
 		visible bit NOT NULL COMMENT '可见性',
@@ -83,10 +84,12 @@ drop table if exists clarification;
 CREATE TABLE clarification (
     id bigint AUTO_INCREMENT,
 		contest_id bigint NOT NULL COMMENT '比赛id',
-		problem_id bigint COMMENT '对应的赛题id,0则为General clarification',
+		problem_id bigint COMMENT '对应的赛题id,NULL则为General clarification',
 		content text NOT NULL COMMENT '提问内容',
 		create_id bigint NOT NULL COMMENT '提问人id',
     create_time timestamp NOT NULL COMMENT '提问时间',
+		read_by_user bit NOT NULL COMMENT '用户阅读tag',
+		read_by_admin bit NOT NULL COMMENT '管理阅读tag',
 		PRIMARY KEY (id)
 );
 

@@ -15,6 +15,8 @@ public class Clarification implements Comparable<Clarification>{
     private String content;
     private UserInfo createUser;
     private Timestamp createTime;
+    private Boolean readByUser;
+    private Boolean readByAdmin;
     private List<ClarificationReply> reply;
 
     @Id
@@ -79,6 +81,26 @@ public class Clarification implements Comparable<Clarification>{
         this.createTime = createTime;
     }
 
+    @Basic
+    @Column(name = "read_by_user")
+    public Boolean getReadByUser() {
+        return readByUser;
+    }
+
+    public void setReadByUser(Boolean readByUser) {
+        this.readByUser = readByUser;
+    }
+
+    @Basic
+    @Column(name = "read_by_admin")
+    public Boolean getReadByAdmin() {
+        return readByAdmin;
+    }
+
+    public void setReadByAdmin(Boolean readByAdmin) {
+        this.readByAdmin = readByAdmin;
+    }
+
     @OneToMany(targetEntity = ClarificationReply.class)
     @JoinColumn(name="clar_id")
     public List<ClarificationReply> getReply() {
@@ -99,12 +121,15 @@ public class Clarification implements Comparable<Clarification>{
                 Objects.equals(problem, that.problem) &&
                 Objects.equals(content, that.content) &&
                 Objects.equals(createUser, that.createUser) &&
-                Objects.equals(createTime, that.createTime);
+                Objects.equals(createTime, that.createTime) &&
+                Objects.equals(readByUser, that.readByUser) &&
+                Objects.equals(readByAdmin, that.readByAdmin) &&
+                Objects.equals(reply, that.reply);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, contestId, problem, content, createUser, createTime);
+        return Objects.hash(id, contestId, problem, content, createUser, createTime, readByUser, readByAdmin, reply);
     }
 
     @Override
