@@ -36,7 +36,7 @@ public class ClarificationController {
     }
 
     @RequestMapping(value = "/reply",method = RequestMethod.POST)
-    public responseBase<String> reply(ClarificationReply clarificationReply){
+    public responseBase<String> reply(@RequestBody ClarificationReply clarificationReply){
         return clarificationService.reply(clarificationReply);
     }
 

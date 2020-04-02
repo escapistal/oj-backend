@@ -38,6 +38,17 @@ public class ClarificationService {
         Clarification data=clarificationRepository.findById(id).orElse(null);
         if(data==null)
             return responseBuilder.fail(responseCode.CLARIFICATION_NOT_EXIST);
+        boolean isAdmin=AuthUtil.has("admin"),updated=false;
+        if(!isAdmin&&!data.getReadByUser()) {
+            data.setReadByUser(true);
+            updated=true;
+        }
+        else if(!isAdmin&&!data.getReadByAdmin()) {
+            data.setReadByAdmin(true);
+            updated=true;
+        }
+        if(updated)
+            clarificationRepository.save(data);
         return responseBuilder.success(data);
     }
 
@@ -64,6 +75,8 @@ public class ClarificationService {
     }
 
     public responseBase<String> reply(ClarificationReply clarificationReply) {
+        System.out.println(clarificationReply.getClarId());
+        System.out.println(clarificationReply.getContent());
         Clarification clarification=clarificationRepository.findById(clarificationReply.getClarId()).orElse(null);
         if(clarification==null)
             return responseBuilder.fail(responseCode.CLARIFICATION_NOT_EXIST);
@@ -74,6 +87,7 @@ public class ClarificationService {
         clarificationReply.setCreateUser(new UserInfo(AuthUtil.getId()));
         clarification.setReadByAdmin(isAdmin);
         clarification.setReadByUser(!isAdmin);
+        clarificationRepository.save(clarification);
         clarificationReplyRepository.save(clarificationReply);
         return responseBuilder.success();
     }

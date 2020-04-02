@@ -41,7 +41,7 @@ public class ContestAnnouncementService {
             contestAnnouncements=contestAnnouncementRepository.findByContestId(cid);
         else
             contestAnnouncements=contestAnnouncementRepository.findByContestIdAndVisible(cid,true);
-        contestAnnouncements.forEach(a->a.setContent(null));
+//        contestAnnouncements.forEach(a->a.setContent(null));
         return responseBuilder.success(contestAnnouncements);
     }
 

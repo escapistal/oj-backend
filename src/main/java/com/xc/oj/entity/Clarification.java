@@ -102,6 +102,7 @@ public class Clarification implements Comparable<Clarification>{
     }
 
     @OneToMany(targetEntity = ClarificationReply.class)
+    @OrderBy("createTime ASC")
     @JoinColumn(name="clar_id")
     public List<ClarificationReply> getReply() {
         return reply;
