@@ -1,9 +1,10 @@
 package com.xc.oj.entity;
 
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class SingleSubmissionInfo {
+public class SingleSubmissionInfo implements Serializable {
 
     private Boolean isAc;
     private Integer acTime;

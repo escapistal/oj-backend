@@ -142,6 +142,9 @@ public class CommonService {
         AcmContestRank acmContestRank,acmContestRankLocked;
         SingleSubmissionInfo info;
         //赛中且非管理员提交，才需要更新
+        System.out.println(submission.getCreateTime());
+        System.out.println(contest.getStartTime());
+        System.out.println(contest.getEndTime());
         if(!submission.getCreateTime().before(contest.getStartTime())&&!submission.getCreateTime().after(contest.getEndTime())
                 && !submission.getUser().getRole().contains("admin")) {
             acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(contest.getId(), submission.getUser().getId(), false).orElse(null);
@@ -160,6 +163,7 @@ public class CommonService {
             }
             if (acmContestRank.getSubmissionInfo().get(problem.getId()) == null
                     || !acmContestRank.getSubmissionInfo().get(problem.getId()).getAc()) {//此前未ac过才需要更新榜单
+                System.out.println(222);
                 if (submission.getStatus() == JudgeResultEnum.AC) {//AC结果
                     problem.setSubmissionNumber(problem.getSubmissionNumber() + 1);
                     problem.setAcceptedNumber(problem.getAcceptedNumber() + 1);
@@ -179,6 +183,7 @@ public class CommonService {
                         problem.setAcceptedNumberLocked(problem.getAcceptedNumberLocked() + 1);
                         acmContestRankLocked.setSubmissionNumber(acmContestRankLocked.getSubmissionNumber() + 1);
                         acmContestRankLocked.setAcceptedNumber(acmContestRankLocked.getAcceptedNumber() + 1);
+                        acmContestRankLocked.setTotalTime(acmContestRank.getTotalTime());
                         acmContestRankLocked.getSubmissionInfo().put(problem.getId(), info);
                     }
                 } else {//非AC结果
@@ -197,8 +202,10 @@ public class CommonService {
                 }
             }
             contestProblemService.save(problem);
+            System.out.println("???");
             acmContestRankService.save(acmContestRank);
             acmContestRankService.save(acmContestRankLocked);
+            System.out.println("!!!");
         }
     }
 

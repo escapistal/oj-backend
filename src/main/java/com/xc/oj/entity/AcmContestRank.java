@@ -58,11 +58,11 @@ public class AcmContestRank implements Comparable<AcmContestRank>{
 
     @Basic
     @Column(name = "locked")
-    public boolean isLocked() {
+    public Boolean getLocked() {
         return locked;
     }
 
-    public void setLocked(boolean locked) {
+    public void setLocked(Boolean locked) {
         this.locked = locked;
     }
 

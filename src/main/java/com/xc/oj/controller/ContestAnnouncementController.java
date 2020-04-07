@@ -42,6 +42,12 @@ public class ContestAnnouncementController {
     }
 
     @PreAuthorize("hasAuthority('admin')")
+    @RequestMapping(value = "/changeVisible/{id}", method = RequestMethod.POST)
+    public responseBase<String> changeVisible(@PathVariable Long id){
+        return contestAnnouncementService.changeVisible(id);
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
     public responseBase<String> delete(@PathVariable Long id) {
         return contestAnnouncementService.delete(id);

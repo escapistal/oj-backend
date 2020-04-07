@@ -10,6 +10,7 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -43,7 +44,7 @@ public class ClarificationService {
             data.setReadByUser(true);
             updated=true;
         }
-        else if(!isAdmin&&!data.getReadByAdmin()) {
+        else if(isAdmin&&!data.getReadByAdmin()) {
             data.setReadByAdmin(true);
             updated=true;
         }
@@ -75,8 +76,6 @@ public class ClarificationService {
     }
 
     public responseBase<String> reply(ClarificationReply clarificationReply) {
-        System.out.println(clarificationReply.getClarId());
-        System.out.println(clarificationReply.getContent());
         Clarification clarification=clarificationRepository.findById(clarificationReply.getClarId()).orElse(null);
         if(clarification==null)
             return responseBuilder.fail(responseCode.CLARIFICATION_NOT_EXIST);
@@ -87,6 +86,7 @@ public class ClarificationService {
         clarificationReply.setCreateUser(new UserInfo(AuthUtil.getId()));
         clarification.setReadByAdmin(isAdmin);
         clarification.setReadByUser(!isAdmin);
+//        System.out.println(clarification.getReadByAdmin()+" ??? "+clarification.getReadByUser());
         clarificationRepository.save(clarification);
         clarificationReplyRepository.save(clarificationReply);
         return responseBuilder.success();
@@ -94,10 +94,11 @@ public class ClarificationService {
 
     public responseBase<List<Clarification>> findByContestId(Long cid) {
         List<Clarification> clarifications;
+        Sort sort=Sort.by(Sort.Order.desc("createTime"));
         if(AuthUtil.has("admin"))
-            clarifications=clarificationRepository.findByContestId(cid);
+            clarifications=clarificationRepository.findByContestId(cid,sort);
         else
-            clarifications=clarificationRepository.findByContestIdAndCreateUser(cid,new UserInfo(AuthUtil.getId()));
+            clarifications=clarificationRepository.findByContestIdAndCreateUser(cid,new UserInfo(AuthUtil.getId()),sort);
         //TODO 懒加载
         clarifications.forEach(c->c.setReply(null));
 //        Collections.sort(clarifications);

@@ -8,6 +8,7 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -37,10 +38,11 @@ public class ContestAnnouncementService {
 
     public responseBase<List<ContestAnnouncement>> findByContestId(Long cid){
         List<ContestAnnouncement> contestAnnouncements;
+        Sort sort=Sort.by(Sort.Order.asc("sortId"),Sort.Order.asc("createTime"));
         if(AuthUtil.has("admin"))
-            contestAnnouncements=contestAnnouncementRepository.findByContestId(cid);
+            contestAnnouncements=contestAnnouncementRepository.findByContestId(cid,sort);
         else
-            contestAnnouncements=contestAnnouncementRepository.findByContestIdAndVisible(cid,true);
+            contestAnnouncements=contestAnnouncementRepository.findByContestIdAndVisible(cid,true,sort);
 //        contestAnnouncements.forEach(a->a.setContent(null));
         return responseBuilder.success(contestAnnouncements);
     }
@@ -99,6 +101,17 @@ public class ContestAnnouncementService {
         if(!contestAnnouncementRepository.existsById(id))
             return responseBuilder.fail(responseCode.CONTEST_ANNOUNCEMENT_NOT_EXIST);
         contestAnnouncementRepository.deleteById(id);
+        return responseBuilder.success();
+    }
+
+    public responseBase<String> changeVisible(Long id) {
+        ContestAnnouncement data=contestAnnouncementRepository.findById(id).orElse(null);
+        if(data==null)
+            return responseBuilder.fail(responseCode.CONTEST_ANNOUNCEMENT_NOT_EXIST);
+        data.setVisible(!data.getVisible());
+        data.setUpdateUser(new UserInfo(AuthUtil.getId()));
+        data.setUpdateTime(new Timestamp(new Date().getTime()));
+        contestAnnouncementRepository.save(data);
         return responseBuilder.success();
     }
 }

@@ -17,7 +17,15 @@ public class AcmContestRankController {
     }
 
     @RequestMapping(value = "/{cid}", method = RequestMethod.GET)
-    public responseBase<List<AcmContestRank>> findByContestId(@PathVariable Long cid, @RequestParam Boolean locked){
+    public responseBase<List<AcmContestRank>> findByContestId(
+            @PathVariable Long cid,
+            @RequestParam(required = false,defaultValue = "true") Boolean locked){
         return acmContestRankService.findByContestIdAndLocked(cid,locked);
+    }
+
+    @RequestMapping(value = "/add", method = RequestMethod.POST)
+    public responseBase<List<AcmContestRank>> add(@RequestBody AcmContestRank acmContestRank){
+        acmContestRankService.save(acmContestRank);
+        return null;
     }
 }

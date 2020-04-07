@@ -1,6 +1,7 @@
 package com.xc.oj.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Table(name = "clarification", schema = "onlinejudge", catalog = "")
 public class Clarification implements Comparable<Clarification>{
     private Long id;
     private Long contestId;
@@ -83,6 +85,7 @@ public class Clarification implements Comparable<Clarification>{
 
     @Basic
     @Column(name = "read_by_user")
+//    @Type(type = "numeric_boolean")
     public Boolean getReadByUser() {
         return readByUser;
     }
@@ -93,6 +96,7 @@ public class Clarification implements Comparable<Clarification>{
 
     @Basic
     @Column(name = "read_by_admin")
+//    @Type(type = "numeric_boolean")
     public Boolean getReadByAdmin() {
         return readByAdmin;
     }

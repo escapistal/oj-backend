@@ -47,7 +47,7 @@ CREATE TABLE contest (
     title text NOT NULL COMMENT '比赛标题',
     description text NOT NULL COMMENT '比赛介绍',
     real_time_rank bit NOT NULL COMMENT '赛中榜单查看权限(ACM/OI通用)',
-    `password` text NOT NULL COMMENT '比赛密码(空则不需要)',
+    `password` text COMMENT '比赛密码(空则不需要)',
     rule_type text NOT NULL COMMENT '目前只有"ACM"/"OI"',
 		penalty_time int NOT NULL COMMENT '每次错误提交的罚时',
     start_time timestamp NOT NULL COMMENT '开始时间',

@@ -6,6 +6,7 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +24,12 @@ public class UserController {
     }
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public responseBase<List<User>> list() {
-        return userService.list();
+    public responseBase<Page<User>> list(
+            @RequestParam(required = false) String keyword,
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        return userService.list(keyword,page,size);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)

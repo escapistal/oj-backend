@@ -25,7 +25,9 @@ public class JudgeResultHandler extends Thread implements CommandLineRunner {
                 JudgeResult judgeResult = (JudgeResult) redisTemplate.opsForList().rightPop("JudgeResult", 0, TimeUnit.SECONDS);
                 if (judgeResult == null)
                     continue;
+                System.out.println("start");
                 commonService.updateSubmissionResult(judgeResult);
+                System.out.println("end");
             }catch(Exception e){
 //                System.out.println("tick-tok");
             }

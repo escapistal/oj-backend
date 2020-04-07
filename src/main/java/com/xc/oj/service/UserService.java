@@ -3,30 +3,29 @@ package com.xc.oj.service;
 import com.xc.oj.entity.Problem;
 import com.xc.oj.entity.User;
 import com.xc.oj.entity.UserInfo;
-import com.xc.oj.response.responseBase;
 import com.xc.oj.repository.UserRepository;
+import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.JWTUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.lang.reflect.Field;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Selection;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService  {
@@ -54,11 +53,20 @@ public class UserService  {
         userRepository.save(user);
     }
 
-    public responseBase<List<User>> list() {
-        List<User> users=userRepository.findAll();
-        users.forEach(user->{user.setPassword(null);user.setAcceptedId(null);});
-        users=users.stream().filter(user->!user.getRole().contains("admin")).collect(Collectors.toList());
-        Collections.sort(users);
+    public responseBase<Page<User>> list(String keyword, int page, int size) {
+       Page<User> users;
+        Specification<User> specification= (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
+            if(keyword==null||"".equals(keyword.trim()))
+                return criteriaBuilder.and();
+            Predicate predicate=criteriaBuilder.like(root.get("username"),"%"+keyword+"%");
+            predicate=criteriaBuilder.or(predicate,criteriaBuilder.like(root.get("nickname"),"%"+keyword+"%"));
+            predicate=criteriaBuilder.or(predicate,criteriaBuilder.like(root.get("realname"),"%"+keyword+"%"));
+            predicate=criteriaBuilder.or(predicate,criteriaBuilder.like(root.get("email"),"%"+keyword+"%"));
+            return predicate;
+        };
+        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.desc("id")));
+        users = userRepository.findAll(specification,pageRequest);
+        users.getContent().forEach(user->{user.setPassword(null);user.setAcceptedId(null);});
         return responseBuilder.success(users);
     }
 
