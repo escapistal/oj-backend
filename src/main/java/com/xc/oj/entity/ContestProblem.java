@@ -1,7 +1,5 @@
 package com.xc.oj.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.util.HashMap;
 import java.util.List;
@@ -87,8 +85,8 @@ public class ContestProblem extends ProblemBase{
     @Override public String getHint() {
         return super.getHint()==null?problem.getHint():super.getHint();
     }
-    @Override public String getTestCaseMd5() {
-        return super.getTestCaseMd5()==null?problem.getTestCaseMd5():super.getTestCaseMd5();
+    @Override public String getTestcaseMd5() {
+        return super.getTestcaseMd5()==null?problem.getTestcaseMd5():super.getTestcaseMd5();
     }
     @Override public List<HashMap<String,String>> getAllowLanguage() {
         return super.getAllowLanguage()==null?problem.getAllowLanguage():super.getAllowLanguage();

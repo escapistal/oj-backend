@@ -6,10 +6,12 @@ import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
 import com.xc.oj.response.responseCode;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import javax.persistence.criteria.Predicate;
 
 @Service
 public class SubmissionService {
@@ -42,37 +44,48 @@ public class SubmissionService {
         submissionRepository.save(submission);
     }
 
-    public responseBase<Page<Submission>> list(Long cid, Long pid, Long uid, String uname,int page,int size) {
+    public responseBase<Page<Submission>> list(List<Long> pids, Long uid, String uname,
+                                               List<JudgeResultEnum> status, List<String> lang,
+                                               int page, int size) {
+        pids.forEach(pid-> System.out.println(pid));
         Page<Submission> submissions;
-//        if(cid!=null&&cid>0) {//TODO 比赛status，cid筛选预计废弃，涉及contest的逻辑另外做，不支持筛选
-//            Contest contest=contestService.findById(cid).orElse(null);
-//            if(contest==null)
-//                return responseBuilder.fail(responseCode.CONTEST_NOT_EXIST);
-//            Timestamp now=new Timestamp(new Date().getTime());
-//            if(!AuthUtil.has("admin")&&!now.after(contest.getEndTime()))
-//                return responseBuilder.fail(responseCode.FORBIDDEN);
-//        }
-        Submission submission=new Submission();
-        if(pid!=null)
-            submission.getProblem().setId(pid);
-        if(uid!=null)//uid优先
-            submission.setUser(new UserInfo(uid));
-        else if(uname!=null&&!"".equals(uname.trim())) {
-            UserInfo userInfo=new UserInfo();
-            userInfo.setNickname(uname);
-            submission.setUser(userInfo);
-        }
-        ExampleMatcher exampleMatcher=ExampleMatcher.matching()
-                .withMatcher("user.nickname" ,ExampleMatcher.GenericPropertyMatchers.contains());
-        Example<Submission> submissionExample = Example.of(submission ,exampleMatcher);
+        Specification<Submission> specification= (Specification<Submission>) (root, criteriaQuery, criteriaBuilder) -> {
+            Predicate predicate=criteriaBuilder.and();
+            if(!pids.isEmpty()) {
+                Predicate p=criteriaBuilder.equal(root.get("problem").get("id"), pids.get(0));
+                for (int i=1;i<pids.size();i++)
+                    p = criteriaBuilder.or(p, criteriaBuilder.equal(root.get("problem").get("id"), pids.get(i)));
+                predicate = criteriaBuilder.and(predicate, p);
+            }
+            if(uid!=null){
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("user").get("id"),uid));
+            }
+            else if(uname!=null){
+                Predicate p=criteriaBuilder.or(criteriaBuilder.like(root.get("user").get("nickname"),"%"+uname+"%"),
+                        criteriaBuilder.like(root.get("user").get("realname"),"%"+uname+"%"));
+                predicate=criteriaBuilder.and(predicate,p);
+            }
+            if(!status.isEmpty()) {
+                Predicate p=criteriaBuilder.equal(root.get("status"), status.get(0));
+                for (int i=1;i<status.size();i++)
+                    p = criteriaBuilder.or(p, criteriaBuilder.equal(root.get("status"), status.get(i)));
+                predicate = criteriaBuilder.and(predicate, p);
+            }
+            if(!lang.isEmpty()){
+                Predicate p=criteriaBuilder.equal(root.get("language"), lang.get(0));
+                for (int i=1;i<lang.size();i++)
+                    p = criteriaBuilder.or(p, criteriaBuilder.equal(root.get("language"), lang.get(i)));
+                predicate = criteriaBuilder.and(predicate, p);
+            }
+            return predicate;
+        };
         PageRequest pageRequest=PageRequest.of(page,size,Sort.by(Sort.Order.desc("createTime")));
-        submissions = submissionRepository.findAll(submissionExample,pageRequest);
+        submissions = submissionRepository.findAll(specification,pageRequest);
         //TODO 懒加载
         submissions.forEach(s -> {
             s.setDetail(null);
             s.setCode(null);
         });
-
         return responseBuilder.success(submissions);
     }
 

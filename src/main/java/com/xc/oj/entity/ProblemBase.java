@@ -24,7 +24,7 @@ public class ProblemBase implements Serializable {
     private String outputDescription;
     private List<HashMap<String,String>> sample;
     private String hint;
-    private String testCaseMd5;
+    private String testcaseMd5;
     private List<HashMap<String,String>> allowLanguage;
     private List<String> tag;
     private Integer timeLimit;
@@ -142,13 +142,13 @@ public class ProblemBase implements Serializable {
     }
 
     @Basic
-    @Column(name = "test_case_md5")
-    public String getTestCaseMd5() {
-        return testCaseMd5;
+    @Column(name = "testcase_md5")
+    public String getTestcaseMd5() {
+        return testcaseMd5;
     }
 
-    public void setTestCaseMd5(String testCaseMd5) {
-        this.testCaseMd5 = testCaseMd5;
+    public void setTestcaseMd5(String testCaseMd5) {
+        this.testcaseMd5 = testCaseMd5;
     }
 
     @Basic
@@ -344,7 +344,7 @@ public class ProblemBase implements Serializable {
                 Objects.equals(outputDescription, problem.outputDescription) &&
                 Objects.equals(sample, problem.sample) &&
                 Objects.equals(hint, problem.hint) &&
-                Objects.equals(testCaseMd5, problem.testCaseMd5) &&
+                Objects.equals(testcaseMd5, problem.testcaseMd5) &&
                 Objects.equals(allowLanguage, problem.allowLanguage) &&
                 Objects.equals(timeLimit, problem.timeLimit) &&
                 Objects.equals(memoryLimit, problem.memoryLimit) &&
@@ -364,6 +364,6 @@ public class ProblemBase implements Serializable {
     @Override
     public int hashCode() {
 
-        return Objects.hash(id, sortId, title, description, inputDescription, outputDescription, sample, hint, testCaseMd5, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, createTime, updateTime, spj, spjLanguage, spjCode, spjMd5, createUser, updateUser);
+        return Objects.hash(id, sortId, title, description, inputDescription, outputDescription, sample, hint, testcaseMd5, allowLanguage, timeLimit, memoryLimit, visible, submissionNumber, acceptedNumber, createTime, updateTime, spj, spjLanguage, spjCode, spjMd5, createUser, updateUser);
     }
 }

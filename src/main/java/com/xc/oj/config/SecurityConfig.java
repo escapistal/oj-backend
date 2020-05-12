@@ -55,6 +55,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        http.headers().frameOptions().disable();
         http
             .exceptionHandling()
             .authenticationEntryPoint(authEntryPoint)
@@ -62,7 +63,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
             .authorizeRequests()
             .antMatchers("/api/user/register","/api/user/login","/swagger-ui.html").permitAll()
-            .antMatchers("/v2/api-docs").permitAll()
+                .antMatchers("/v2/api-docs").permitAll()
+                .antMatchers("/api/img/**").permitAll()
+                .antMatchers("/img/**").permitAll()
                 .antMatchers("/api/announcement/list","/api/announcement/{id}").permitAll()
                 .antMatchers("/api/problem/list","/api/problem/{id}").permitAll()
                 .antMatchers("/api/contest/list","/api/contest/{id}").permitAll()
@@ -81,5 +84,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) {
         web.ignoring().antMatchers("/webjars/**");
         web.ignoring().antMatchers("/swagger-resources/**");
+        web.ignoring().antMatchers("/img/**");
+        web.ignoring().antMatchers("/api/img/**");
     }
 }

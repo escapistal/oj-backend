@@ -1,6 +1,7 @@
 package com.xc.oj.service;
 
 import com.xc.oj.entity.Announcement;
+import com.xc.oj.entity.Problem;
 import com.xc.oj.entity.UserInfo;
 import com.xc.oj.repository.AnnouncementRepository;
 import com.xc.oj.response.responseBase;
@@ -10,8 +11,10 @@ import com.xc.oj.util.AuthUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.Predicate;
 import java.awt.print.Pageable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -26,17 +29,30 @@ public class AnnouncementService {
         this.announcementRepository = announcementRepository;
     }
 
-    public responseBase<Page<Announcement>> list(boolean checkVisible,int page,int size) {
+    public responseBase<Page<Announcement>> list(boolean checkVisible, String keyword, int page, int size) {
         Page<Announcement> announcements;
-        PageRequest pageRequest=PageRequest.of(page, size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
         if(!checkVisible&&!AuthUtil.has("admin"))
             checkVisible=true;
-        if(!checkVisible)
-            announcements=announcementRepository.findAll(pageRequest);
-        else
-            announcements=announcementRepository.findByVisible(true, pageRequest);
-        //TODO 懒加载
-        announcements.forEach(a->a.setContent(null));
+        boolean finalCheckVisible = checkVisible;
+        Specification<Announcement> specification= (Specification<Announcement>) (root, criteriaQuery, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.and();
+            if(finalCheckVisible)
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("visible"),true));
+            if(keyword!=null&&!"".equals(keyword.trim()))
+                predicate=criteriaBuilder.and(
+                        predicate,
+                        criteriaBuilder.or(
+                                criteriaBuilder.or(
+                                criteriaBuilder.like(root.get("createUser").get("nickname"),"%"+keyword.trim()+"%"),
+                                criteriaBuilder.like(root.get("createUser").get("realname"),"%"+keyword.trim()+"%")),
+                                criteriaBuilder.like(root.get("title"),"%"+keyword.trim()+"%")
+                        )
+                );
+            return predicate;
+        };
+        PageRequest pageRequest=PageRequest.of(page, size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
+        announcements=announcementRepository.findAll(specification,pageRequest);
+//        announcements.forEach(a->a.setContent(null));
         return responseBuilder.success(announcements);
     }
 

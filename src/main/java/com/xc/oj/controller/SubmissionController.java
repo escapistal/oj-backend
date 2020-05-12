@@ -1,5 +1,6 @@
 package com.xc.oj.controller;
 
+import com.xc.oj.entity.JudgeResultEnum;
 import com.xc.oj.entity.Submission;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.service.SubmissionService;
@@ -8,6 +9,7 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,14 +23,20 @@ public class SubmissionController {
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public responseBase<Page<Submission>> list(
-            @RequestParam(required = false) Long cid,
-            @RequestParam(required = false) Long pid,
+            @RequestParam(required = false) List<Long> pid,
             @RequestParam(required = false) Long uid,
             @RequestParam(required = false) String uname,
+            @RequestParam(required = false) List<JudgeResultEnum> status,
+            @RequestParam(required = false) List<String> lang,
             @RequestParam int page,
             @RequestParam int size
-            ){
-        return submissionService.list(cid,pid,uid,uname,page,size);
+    ){
+        if(pid==null)pid=new ArrayList<>();
+        if("".equals(uid))uid=null;
+        if("".equals(uname))uname=null;
+        if(status==null)status=new ArrayList<>();
+        if(lang==null)lang=new ArrayList<>();
+        return submissionService.list(pid,uid,uname,status,lang,page,size);
     }
 
     @PostAuthorize("returnObject.status !=0 or returnObject.data.user.id == principal.id or hasAuthority('admin')")

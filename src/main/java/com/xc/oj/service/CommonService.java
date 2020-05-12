@@ -6,18 +6,28 @@ import com.xc.oj.repository.SubmissionBaseRepository;
 import com.xc.oj.repository.SubmissionRepository;
 import com.xc.oj.response.responseBase;
 import com.xc.oj.response.responseBuilder;
+import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.OJPropertiesUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
+import java.util.Properties;
 
 @Service
 public class CommonService {
+
+    @Value("${file.uploadDir}")
+    private String uploadDir;
 
     final SubmissionBaseRepository submissionBaseService;
     final SubmissionRepository submissionService;
@@ -60,7 +70,7 @@ public class CommonService {
         judgeTask.setCode(submission.getCode());
         judgeTask.setTimeLimit(problem.getRealTimeLimit(submission.getLanguage()));
         judgeTask.setMemoryLimit(problem.getRealMemoryLimit(submission.getLanguage()));
-        judgeTask.setTestcaseMd5(problem.getTestCaseMd5());
+        judgeTask.setTestcaseMd5(problem.getTestcaseMd5());
         System.out.println(judgeTask.getTimeLimit());
         System.out.println(judgeTask.getMemoryLimit());
         if(problem.getSpj())
@@ -72,29 +82,33 @@ public class CommonService {
     private void getSummary(SubmissionBase submission,JudgeResult judgeResult){//补充评测细节并存库
         Integer maxExecTime=0;
         Integer maxExecMemory=0;
-        JudgeResultEnum firstErr=null;
-        int err=0,pe=0,se=0;
-        for (SingleJudgeResult res : judgeResult.getDetail()) {
-            maxExecTime=Math.max(maxExecTime,res.getExecTime());
-            maxExecMemory=Math.max(maxExecMemory,res.getExecMemory());
-            if(res.getResult()!=JudgeResultEnum.AC){
-                ++err;
-                if(res.getResult()==JudgeResultEnum.PE)
-                    ++pe;
-                if(res.getResult()==JudgeResultEnum.SE)
-                    ++se;
-                if(firstErr==null&&res.getResult()!=JudgeResultEnum.PE)
-                    firstErr=res.getResult();
+        if(judgeResult.getResult()!=JudgeResultEnum.CE&&judgeResult.getResult()!=JudgeResultEnum.SE){
+            JudgeResultEnum firstErr = null;
+            int err = 0, pe = 0, se = 0;
+            for (SingleJudgeResult res : judgeResult.getDetail()) {
+                maxExecTime = Math.max(maxExecTime, res.getExecTime());
+                maxExecMemory = Math.max(maxExecMemory, res.getExecMemory());
+                if (res.getResult() != JudgeResultEnum.AC) {
+                    ++err;
+                    if (res.getResult() == JudgeResultEnum.PE)
+                        ++pe;
+                    if (res.getResult() == JudgeResultEnum.SE)
+                        ++se;
+                    if (firstErr == null && res.getResult() != JudgeResultEnum.PE)
+                        firstErr = res.getResult();
+                }
             }
+            if (se > 0)
+                submission.setStatus(JudgeResultEnum.SE);
+            else if (err == 0)//AC
+                submission.setStatus(JudgeResultEnum.AC);
+            else if (err == pe || firstErr == null)//全部非AC点都PE才算PE
+                submission.setStatus(JudgeResultEnum.PE);
+            else
+                submission.setStatus(firstErr);
         }
-        if(se>0)
-            submission.setStatus(JudgeResultEnum.SE);
-        else if(err==0)//AC
-            submission.setStatus(JudgeResultEnum.AC);
-        else if(err==pe||firstErr==null)//全部非AC点都PE才算PE
-            submission.setStatus(JudgeResultEnum.PE);
         else
-            submission.setStatus(firstErr);
+            submission.setStatus(judgeResult.getResult());
         submission.setDetail(judgeResult.getDetail());
         submission.setExecuteTime(maxExecTime);
         submission.setExecuteMemory(maxExecMemory);
@@ -142,9 +156,6 @@ public class CommonService {
         AcmContestRank acmContestRank,acmContestRankLocked;
         SingleSubmissionInfo info;
         //赛中且非管理员提交，才需要更新
-        System.out.println(submission.getCreateTime());
-        System.out.println(contest.getStartTime());
-        System.out.println(contest.getEndTime());
         if(!submission.getCreateTime().before(contest.getStartTime())&&!submission.getCreateTime().after(contest.getEndTime())
                 && !submission.getUser().getRole().contains("admin")) {
             acmContestRank = acmContestRankService.findByContestIdAndUserIdAndLocked(contest.getId(), submission.getUser().getId(), false).orElse(null);
@@ -163,7 +174,6 @@ public class CommonService {
             }
             if (acmContestRank.getSubmissionInfo().get(problem.getId()) == null
                     || !acmContestRank.getSubmissionInfo().get(problem.getId()).getAc()) {//此前未ac过才需要更新榜单
-                System.out.println(222);
                 if (submission.getStatus() == JudgeResultEnum.AC) {//AC结果
                     problem.setSubmissionNumber(problem.getSubmissionNumber() + 1);
                     problem.setAcceptedNumber(problem.getAcceptedNumber() + 1);
@@ -202,11 +212,51 @@ public class CommonService {
                 }
             }
             contestProblemService.save(problem);
-            System.out.println("???");
             acmContestRankService.save(acmContestRank);
             acmContestRankService.save(acmContestRankLocked);
-            System.out.println("!!!");
         }
     }
 
+    public static void flow(InputStream in, OutputStream out) throws IOException {
+        int bytesRead;
+        byte[] buffer = new byte[8192];
+        while ((bytesRead = in.read(buffer, 0, 8192)) != -1)
+            out.write(buffer, 0, bytesRead);
+    }
+
+    public responseBase upload(MultipartFile file) {
+        String md5;
+        String ext;
+        try {
+            InputStream is = file.getInputStream();
+            OutputStream os;
+            md5=DigestUtils.md5DigestAsHex(is);
+            is.close();
+            String fileName=file.getOriginalFilename();
+            ext=fileName.substring(fileName.lastIndexOf("."));
+            File dir = new File(uploadDir + md5 + ext);
+            if(dir.exists())
+                dir.delete();
+            dir.createNewFile();
+            is=file.getInputStream();
+            os=new FileOutputStream(dir);
+            flow(is,os);
+            is.close();
+            os.close();
+        }catch(Exception e){
+            e.printStackTrace();
+            return responseBuilder.fail(responseCode.READ_FILE_ERROR);
+        }
+        return responseBuilder.success("api/img/" + md5 + ext);
+    }
+
+    public responseBase changeOption(String key, String value) {
+        OJPropertiesUtil.store(key,value);
+        return responseBuilder.success();
+    }
+
+    public responseBase<Properties> getOptions() {
+        System.out.println(OJPropertiesUtil.getProperties().stringPropertyNames());
+        return responseBuilder.success(OJPropertiesUtil.getProperties());
+    }
 }

@@ -24,8 +24,15 @@ public class ProblemController {
     public responseBase<Page<Problem>> list(
             @RequestParam int page,
             @RequestParam int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) List<String> tag,
             @RequestParam(required = false,defaultValue = "true") boolean checkVisible) {
-        return problemService.list(checkVisible,page,size);
+        return problemService.list(checkVisible,keyword,tag,page,size);
+    }
+
+    @RequestMapping(value = "/tags", method = RequestMethod.GET)
+    public responseBase<List<String>> tags(){
+        return problemService.tags();
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")
@@ -62,5 +69,11 @@ public class ProblemController {
     @RequestMapping(value = "/setTestcase/{id}", method = RequestMethod.POST)
     public responseBase setTestcase(@PathVariable long id, @RequestBody MultipartFile file){
         return problemService.setTestcase(id,file);
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
+    @RequestMapping(value = "/uploadTestcase", method = RequestMethod.POST)
+    public responseBase uploadTestcase(@RequestBody MultipartFile file){
+        return problemService.uploadTestcase(file);
     }
 }

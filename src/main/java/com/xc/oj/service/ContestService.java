@@ -9,8 +9,10 @@ import com.xc.oj.util.AuthUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.Predicate;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -36,30 +38,32 @@ public class ContestService {
         contestRepository.save(contest);
     }
 
-    public responseBase<Page<Contest>> list(boolean checkVisible,String state, int page, int size){
+    public responseBase<Page<Contest>> list(boolean checkVisible, String keyword, String state, int page, int size){
         Page<Contest> contests = null;
         PageRequest pageRequest=null;
         if(!checkVisible&&!AuthUtil.has("admin"))
             checkVisible=true;
-        if("complete".equals(state)) {
+        boolean finalCheckVisible = checkVisible;
+        Specification<Contest> specification= (Specification<Contest>) (root, criteriaQuery, criteriaBuilder) -> {
+            Predicate predicate=criteriaBuilder.and();
+            if(finalCheckVisible)
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("visible"),true));
+            if(keyword!=null&&!"".equals(keyword.trim()))
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("title"), "%" + keyword.trim() + "%"));
+            if("current".equals(state))
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThan(root.get("endTime"),new Timestamp(new Date().getTime())));
+            else if("ended".equals(state))
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThan(root.get("endTime"),new Timestamp(new Date().getTime())));
+            return predicate;
+        };
+        if("complete".equals(state)||"ended".equals(state)) {
             pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("startTime")));
-            if (!checkVisible)
-                contests = contestRepository.findAll(pageRequest);
-            else
-                contests = contestRepository.findByVisible(true, pageRequest);
         }
         else if("current".equals(state)){
             pageRequest=PageRequest.of(0,50, Sort.by(Sort.Order.asc("startTime")));
-            System.out.println(new Timestamp(new Date().getTime()));
-            contests=contestRepository.findByEndTimeAfterAndVisible(new Timestamp(new Date().getTime()),true,pageRequest);
         }
-        else if("ended".equals(state)){
-            pageRequest=PageRequest.of(0,50, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("startTime")));
-            contests=contestRepository.findByEndTimeBeforeAndVisible(new Timestamp(new Date().getTime()),true,pageRequest);
-        }
+        contests=contestRepository.findAll(specification,pageRequest);
         contests.forEach(c->{
-            System.out.println(c.getEndTime());
-            System.out.println(c.getEndTime().before(new Timestamp(new Date().getTime())));
             if(c.getPassword()!=null&&!c.getPassword().isEmpty())
                 c.setPassword("set");
             else
@@ -83,7 +87,7 @@ public class ContestService {
         contest.setUpdateUser(contest.getCreateUser());
         contest.setUpdateTime(contest.getCreateTime());
         contestRepository.save(contest);
-        return responseBuilder.success();
+        return responseBuilder.success(String.valueOf(contest.getId()));
     }
 
     public responseBase<String> update(Long id, Contest contest) {
@@ -112,6 +116,7 @@ public class ContestService {
             data.setEndTime(contest.getEndTime());
         contest.setUpdateUser(new UserInfo(AuthUtil.getId()));
         contest.setUpdateTime(new Timestamp(new Date().getTime()));
+        contestRepository.save(data);
         return responseBuilder.success();
     }
 

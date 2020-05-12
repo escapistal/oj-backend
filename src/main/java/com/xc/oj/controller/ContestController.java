@@ -22,8 +22,9 @@ public class ContestController {
             @RequestParam(required = false,defaultValue = "0") int page,
             @RequestParam(required = false,defaultValue = "10") int size,
             @RequestParam(required = false,defaultValue = "complete") String state,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false,defaultValue = "true") boolean checkVisible) {
-        return contestService.list(checkVisible,state,page,size);
+        return contestService.list(checkVisible,keyword,state,page,size);
     }
 
     @PostAuthorize("returnObject.status!=0 or returnObject.data.visible == true or hasAuthority('admin')")

@@ -1,7 +1,7 @@
 package com.xc.oj.util;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPReply;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -52,8 +52,11 @@ public class FTPUtil {
         FTPClient ftp=new FTPClient();
         ftp.connect(host,port);
         ftp.login(username,password);
-        if(FTPReply.isPositiveCompletion(ftp.getReplyCode()))
+        if(FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
+            ftp.setFileType(FTP.BINARY_FILE_TYPE);
+            ftp.enterLocalPassiveMode();
             return ftp;
+        }
         ftp.disconnect();
         return null;
     }
@@ -61,7 +64,10 @@ public class FTPUtil {
         FTPClient ftp=connect();
         if(ftp==null)
             return false;
-        boolean ret=ftp.storeFile(file.getName(),new FileInputStream(file));
+
+        InputStream fi=new FileInputStream(file);
+        boolean ret=ftp.storeFile(file.getName(),fi);
+        fi.close();
         if(ftp.isConnected())
             ftp.disconnect();
         return ret;

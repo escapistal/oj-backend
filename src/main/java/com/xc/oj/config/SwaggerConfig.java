@@ -1,7 +1,9 @@
 package com.xc.oj.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -23,6 +25,20 @@ import java.util.List;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig extends WebMvcConfigurationSupport {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // 设置允许跨域的路径
+        registry.addMapping("/**")
+                // 设置允许跨域请求的域名
+                .allowedOrigins("*")
+                // 是否允许证书 不再默认开启
+                .allowCredentials(true)
+                // 设置允许的方法
+                .allowedMethods("*")
+                // 跨域允许时间
+                .maxAge(3600);
+    }
 
     @Bean
     public Docket productApi() {
@@ -61,6 +77,9 @@ public class SwaggerConfig extends WebMvcConfigurationSupport {
                 .build();
     }
 
+    @Value("${file.uploadDir}")
+    private String uploadDir;
+
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("swagger-ui.html")
@@ -68,5 +87,8 @@ public class SwaggerConfig extends WebMvcConfigurationSupport {
 
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
+
+        registry.addResourceHandler("/api/img/**")
+                .addResourceLocations("file:"+uploadDir);
     }
 }

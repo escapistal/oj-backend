@@ -2,6 +2,7 @@ package com.xc.oj.util;
 
 import org.apache.logging.log4j.util.PropertiesUtil;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 import java.io.*;
@@ -11,10 +12,11 @@ import java.util.Properties;
 public class OJPropertiesUtil {
     private static String filePath=PropertiesUtil.class.getClassLoader().getResource("oj.properties").getFile();
     private static Properties prop;
+    private static Resource resource=new ClassPathResource("oj.properties");
     public static Properties getProperties(){
         if(prop==null||prop.isEmpty()) {
             try {
-                prop = PropertiesLoaderUtils.loadProperties(new ClassPathResource("oj.properties"));
+                prop = PropertiesLoaderUtils.loadProperties(resource);
             } catch (IOException e) {
                 prop=new Properties();
                 e.printStackTrace();
@@ -27,8 +29,9 @@ public class OJPropertiesUtil {
     }
     public static void store(String key,String value){
         try {
-            BufferedWriter bw=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(URLDecoder.decode(filePath,"utf-8"))));
-            getProperties().put(key,value);
+            System.out.println(key+" "+value);
+            OutputStream bw=new FileOutputStream(URLDecoder.decode(filePath,"utf-8"));
+            getProperties().setProperty(key,value);
             getProperties().store(bw, "");
             bw.close();
         } catch (IOException e) {

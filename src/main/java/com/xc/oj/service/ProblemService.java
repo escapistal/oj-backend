@@ -9,14 +9,15 @@ import com.xc.oj.response.responseCode;
 import com.xc.oj.util.AuthUtil;
 import com.xc.oj.util.FTPUtil;
 import com.xc.oj.util.ZipUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.criteria.Predicate;
 import java.io.*;
 import java.math.BigInteger;
 import java.sql.Timestamp;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
 
 @Service
 public class ProblemService {
@@ -42,15 +44,39 @@ public class ProblemService {
         problemRepository.save(problem);
     }
 
-    public responseBase<Page<Problem>> list(boolean checkVisible, int page, int size) {
+    public responseBase<Page<Problem>> list(boolean checkVisible, String keyword, List<String> tags, int page, int size) {
         Page<Problem> problems;
-        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("createTime")));
         if(!checkVisible&&!AuthUtil.has("admin"))
             checkVisible=true;
-        if(!checkVisible)
-            problems=problemRepository.findAll(pageRequest);
-        else
-            problems=problemRepository.findByVisible(true,pageRequest);
+        boolean finalCheckVisible = checkVisible;
+        Specification<Problem> specification= (Specification<Problem>) (root, criteriaQuery, criteriaBuilder) -> {
+            Predicate predicate=criteriaBuilder.and();
+            if(finalCheckVisible)
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(root.get("visible"),true));
+            if(keyword!=null&&!"".equals(keyword.trim())) {
+                predicate = criteriaBuilder.and(predicate,
+                        criteriaBuilder.or(criteriaBuilder.like(root.get("title"), "%" + keyword.trim() + "%"),
+                                criteriaBuilder.like(root.get("name"), "%" + keyword.trim() + "%")));
+            }
+            if(tags!=null&&!tags.isEmpty()){
+                //TODO 考虑转义，使用更安全的转换方式
+                StringBuilder sb = new StringBuilder();
+                sb.append("[");
+                for (int i=0;i<tags.size();i++) {
+                    if(i>0)
+                        sb.append(',');
+                    sb.append('"').append(tags.get(i)).append('"');
+                }
+                sb.append("]");
+                System.out.println(sb.toString());
+                predicate=criteriaBuilder.and(predicate,criteriaBuilder.equal(
+                        criteriaBuilder.function("JSON_CONTAINS",String.class,root.get("tag"),
+                                criteriaBuilder.literal(sb.toString())),1));
+            }
+            return predicate;
+        };
+        PageRequest pageRequest=PageRequest.of(page,size, Sort.by(Sort.Order.asc("sortId"),Sort.Order.desc("id")));
+        problems=problemRepository.findAll(specification,pageRequest);
         return responseBuilder.success(problems);
     }
 
@@ -82,7 +108,7 @@ public class ProblemService {
         problem.setUpdateUser(problem.getCreateUser());
         problem.setUpdateTime(problem.getCreateTime());
         problemRepository.save(problem);
-        return responseBuilder.success();
+        return responseBuilder.success(problem.getId().toString());
     }
 
     public responseBase<String> update(long id, Problem prob) {
@@ -103,11 +129,12 @@ public class ProblemService {
             data.setOutputDescription(prob.getOutputDescription());
         if (prob.getHint() != null)
             data.setHint(prob.getHint());
-
+        if (prob.getTag() != null)
+            data.setTag(prob.getTag());
         if (prob.getSample() != null)
             data.setSample(prob.getSample());
-        if (prob.getTestCaseMd5() != null)
-            data.setTestCaseMd5(prob.getTestCaseMd5());
+        if (prob.getTestcaseMd5() != null)
+            data.setTestcaseMd5(prob.getTestcaseMd5());
         if (prob.getAllowLanguage() != null)
             data.setAllowLanguage(prob.getAllowLanguage());
         if (prob.getTimeLimit()!=null && prob.getTimeLimit() > 0)
@@ -157,10 +184,7 @@ public class ProblemService {
         is.close();
         return f;
     }
-    public responseBase setTestcase(long id, MultipartFile multipartFile){
-        Problem problem=problemRepository.findById(id).orElse(null);
-        if(problem==null)
-            return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
+    public responseBase uploadTestcase(MultipartFile multipartFile){
         String fileName = multipartFile.getOriginalFilename();
         if(!fileName.endsWith(".zip"))
             return responseBuilder.fail(responseCode.NOT_ZIP_EXTENSION);
@@ -271,18 +295,35 @@ public class ProblemService {
             }
             zos.close();
             deleteDir(targetDir);
-            problem.setTestCaseMd5(testcaseMd5);
             if(!FTPUtil.upload(zip))
                 return responseBuilder.fail(responseCode.FTP_UPLOAD_ERROR);
-            problem.setUpdateUser(new UserInfo(AuthUtil.getId()));
-            problem.setUpdateTime(new Timestamp(new Date().getTime()));
-            problemRepository.save(problem);
-            return responseBuilder.success(inName.size());
+            return responseBuilder.success(testcaseMd5);
         } catch(IOException e) {
             return responseBuilder.fail(responseCode.READ_FILE_ERROR);
         }finally {
 
         }
+    }
+    public responseBase setTestcase(long id, MultipartFile multipartFile){
+        Problem problem=problemRepository.findById(id).orElse(null);
+        if(problem==null)
+            return responseBuilder.fail(responseCode.PROBLEM_NOT_EXIST);
+        responseBase resp=uploadTestcase(multipartFile);
+        if(resp.getStatus()!=0)
+            return resp;
+        problem.setTestcaseMd5((String) resp.getData());
+        problem.setUpdateUser(new UserInfo(AuthUtil.getId()));
+        problem.setUpdateTime(new Timestamp(new Date().getTime()));
+        problemRepository.save(problem);
+        return responseBuilder.success(problem.getId());
+    }
 
+    @Deprecated
+    public responseBase<List<String>> tags() {
+        Set<String> set=new HashSet<>();
+        for(Problem p:problemRepository.findAll())
+            for(String tag:p.getTag())
+                set.add(tag);
+        return responseBuilder.success(new ArrayList<>(set));
     }
 }

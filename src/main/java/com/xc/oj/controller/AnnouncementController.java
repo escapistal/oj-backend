@@ -8,8 +8,6 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/announcement")
 public class AnnouncementController {
@@ -23,9 +21,10 @@ public class AnnouncementController {
     public responseBase<Page<Announcement>> list(
             @RequestParam int page,
             @RequestParam int size,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false,defaultValue = "true") boolean checkVisible)
     {
-        return announcementService.list(checkVisible,page,size);
+        return announcementService.list(checkVisible,keyword,page,size);
     }
 
     @PostAuthorize("returnObject.data.visible == true or hasAuthority('admin')")

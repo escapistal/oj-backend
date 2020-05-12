@@ -84,6 +84,12 @@ public class UserService  {
         user.setAcceptedId(new ArrayList<>());
         user.setAcceptedNumber(0);
         user.setSubmissionNumber(0);
+        if(user.getNickname()==null||"".equals(user.getNickname()))
+            user.setNickname(user.getUsername());
+        if(user.getRealname()==null||"".equals(user.getRealname()))
+            user.setRealname(user.getUsername());
+        if(user.getDisabled()==null)
+            user.setDisabled(false);
         userRepository.save(user);
         return responseBuilder.success();
     }
@@ -157,6 +163,8 @@ public class UserService  {
         if(AuthUtil.has("admin")){//拥有admin权限才能修改以下字段
             if(user.getRole()!=null)
                 data.setRole(user.getRole());
+            if(user.getPassword()!=null)
+                data.setPassword(encoder.encode(user.getPassword()));
             if(user.getDisabled()!=null)
                 data.setDisabled(user.getDisabled());
         }

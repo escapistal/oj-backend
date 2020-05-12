@@ -114,7 +114,7 @@ CREATE TABLE problem (
     output_description text COMMENT '输出描述',
     sample json  COMMENT '样例们[{"input":"...","output":"..."},...]',
     hint text COMMENT '提示信息',
-		test_case_md5 text COMMENT 'testcase的md5,对应到本地的testcase/[md5]文件夹',
+		testcase_md5 text COMMENT 'testcase的md5,对应到本地的testcase/[md5]文件夹',
     allow_language json COMMENT '[{"language":"C++","factor":1.0},{"language":"Java","factor":2.0},{"language":"Python2","factor":3.0},{"language":"Python3","factor":3.0}]',
 		tag json COMMENT '["tag1","tag2",...]',
     time_limit int  COMMENT '时间限制(ms)',
